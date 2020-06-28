@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FoenixIDE.Timers;
 using System.IO;
+using System.Diagnostics;
 
 namespace FoenixIDE.UI
 {
@@ -284,14 +285,50 @@ namespace FoenixIDE.UI
             loader.ShowDialog(this);
         }
 
-        DateTime pSof;
+        Stopwatch fpsWatch = new Stopwatch();
+        int previousCounter = 0;
+        int previousFrame = 0;
+
+        private void Gpu_Update_Cps_Fps()
+        {
+            if (kernel != null && kernel.CPU != null)
+            {
+                DateTime currentTime = DateTime.Now;
+
+                if (!kernel.CPU.DebugPause)
+                {
+                    fpsWatch.Stop();
+                    double seconds = fpsWatch.Elapsed.TotalSeconds;
+                    
+                    int currentCounter = kernel.CPU.CycleCounter;
+                    int currentFrame = gpu.paintCycle;
+                    double cps = (currentCounter - previousCounter) / seconds;
+                    double fps = (currentFrame - previousFrame) / seconds;
+
+                    previousCounter = currentCounter;
+                    previousFrame = currentFrame;
+                    Write_CPS_FPS_Safe("CPS: " + cps.ToString("N0"), "FPS: " + fps.ToString("N0"));
+                    fpsWatch.Restart();
+                }
+                // write the time to memory - values are BCD
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_SEC - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Second));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MIN - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Minute));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_HRS - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Hour));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DAY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Day));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MONTH - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Month));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_YEAR - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year % 100));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_CENTURY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year / 100));
+                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DOW - kernel.MemMgr.VICKY.StartAddress, (byte)(currentTime.DayOfWeek + 1));
+            }
+            else
+            {
+                cpsPerf.Text = "CPS: 0";
+                fpsPerf.Text = "FPS: 0";
+            }
+        }
+
         public void SOF()
         {
-            // Check if the interrupt is enabled
-            DateTime currentDT = DateTime.Now;
-            TimeSpan ts = currentDT - pSof;
-            //System.Console.WriteLine(ts.TotalMilliseconds);
-            pSof = currentDT;
             byte mask = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
             if (!kernel.CPU.DebugPause && !kernel.CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT00_SOF) == (byte)Register0.FNX0_INT00_SOF))
             {
@@ -397,45 +434,8 @@ namespace FoenixIDE.UI
                 fpsPerf.Text = FPS;
             }
         }
-        int previousCounter = 0;
-        int previousFrame = 0;
-        DateTime previousTime = DateTime.Now;
-        private void Gpu_Update_Cps_Fps()
-        {
-            if (kernel != null  && kernel.CPU != null)
-            {
-                DateTime currentTime = DateTime.Now;
 
-                if (!kernel.CPU.DebugPause)
-                {
-                    
-                    TimeSpan s = currentTime - previousTime;
-                    int currentCounter = kernel.CPU.CycleCounter;
-                    int currentFrame = gpu.paintCycle;
-                    double cps = (currentCounter - previousCounter) / s.TotalSeconds;
-                    double fps = (currentFrame - previousFrame) / s.TotalSeconds;
-
-                    previousCounter = currentCounter;
-                    previousTime = currentTime;
-                    previousFrame = currentFrame;
-                    Write_CPS_FPS_Safe("CPS: " + cps.ToString("N0"), "FPS: " + fps.ToString("N0"));
-                }
-                // write the time to memory - values are BCD
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_SEC - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Second));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MIN - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Minute));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_HRS - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Hour));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DAY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Day));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MONTH - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Month));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_YEAR - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year % 100));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_CENTURY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year / 100));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DOW - kernel.MemMgr.VICKY.StartAddress, (byte)(currentTime.DayOfWeek + 1));
-            }
-            else
-            {
-                cpsPerf.Text = "CPS: 0";
-                fpsPerf.Text = "FPS: 0";
-            }
-        }
+        
 
         private byte BCD(int val)
         {
@@ -461,8 +461,8 @@ namespace FoenixIDE.UI
          * Restart the CPU
          */
         public void RestartMenuItemClick(object sender, EventArgs e)
-        {           
-            previousCounter = 0;
+        {
+            fpsWatch.Restart();
             debugWindow.Pause();
             if (kernel.ResetCPU(false, null))
             {
@@ -482,7 +482,7 @@ namespace FoenixIDE.UI
          */
         private void DebugToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            previousCounter = 0;
+            fpsWatch.Restart();
             debugWindow.Pause();
             if (kernel.ResetCPU(false, null))
             {

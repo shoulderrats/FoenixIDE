@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Diagnostics;
 
 namespace FoenixIDE.Display
 {
@@ -80,7 +81,7 @@ namespace FoenixIDE.Display
             }
             catch (Exception ex)
             {
-                SystemLog.WriteLine(SystemLog.SeverityCodes.Recoverable, "Error in CharacteSet.Load\r\n" + ex.Message + "Filename:" + Filename);
+                Debug.WriteLine("Error in CharacteSet.Load\r\n" + ex.Message + "Filename:" + Filename);
             }
         }
     }

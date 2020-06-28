@@ -1,6 +1,7 @@
 ﻿using FoenixIDE.MemoryLocations;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -513,7 +514,7 @@ namespace FoenixIDE.Simulator.Devices
                     {
                         // controller error
                         data[5] = 1;
-                        System.Console.WriteLine(e.ToString());
+                        Debug.WriteLine(e.ToString());
                         return null;
                     }
                     finally

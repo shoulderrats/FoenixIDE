@@ -192,7 +192,6 @@
     <Compile Include="UI\RegisterDisplay.Designer.cs">
       <DependentUpon>RegisterDisplay.cs</DependentUpon>
     </Compile>
-    <Compile Include="SystemLog.cs" />
     <Compile Include="UI\BitmapLoader.cs">
       <SubType>Form</SubType>
     </Compile>
