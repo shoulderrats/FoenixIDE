@@ -1,4 +1,8 @@
-﻿using System;
+﻿using OpenTK.Graphics.OpenGL;
+using OpenTK.Platform;
+using OpenTK;
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -70,8 +74,11 @@ namespace FoenixIDE.Display
 
         void Gpu_Load(object sender, EventArgs e)
         {
-            this.Paint += new PaintEventHandler(Gpu_Paint);
-            this.DoubleBuffered = true;
+            //this.Paint += new PaintEventHandler(Gpu_Paint);
+            //this.DoubleBuffered = true;
+
+           
+            
             //gpuRefreshTimer.Tick += new EventHandler(GpuRefreshTimer_Tick);
             hiresTimer.Elapsed += new MultimediaElapsedEventHandler(GpuRefreshTimer_Tick);
 
@@ -91,8 +98,9 @@ namespace FoenixIDE.Display
                 ParentForm.Width = (int)Math.Ceiling(htarget * 1.6) + sidemargin;
                 //gpuRefreshTimer.Enabled = true;
                 hiresTimer.Start();
-            }
+            }      
         }
+
         void GpuRefreshTimer_Tick(object sender, EventArgs e)
         {
             if (BlinkingCounter-- == 0)
@@ -100,7 +108,7 @@ namespace FoenixIDE.Display
                 CursorState = !CursorState;
                 BlinkingCounter = BLINK_RATE;
             }
-            Invalidate();
+            glControl1.Invalidate();
             if (BlinkingCounter == 0)
             {
                 GpuUpdated?.Invoke();
@@ -124,9 +132,11 @@ namespace FoenixIDE.Display
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        Bitmap frameBuffer = new Bitmap(640, 480, PixelFormat.Format32bppArgb);
+        Bitmap frameBuffer = new Bitmap(640, 480, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
         private volatile bool drawing = false;
-        unsafe void Gpu_Paint(object sender, PaintEventArgs e)
+
+        private unsafe void glControl1_Paint(object sender, PaintEventArgs e)
+        //unsafe void Gpu_Paint(object sender, PaintEventArgs e)
         {
             paintCycle++;
             if (DesignMode)
@@ -204,7 +214,7 @@ namespace FoenixIDE.Display
             int borderYSize = VICKY.ReadByte(MemoryMap.BORDER_Y_SIZE - MemoryMap.VICKY_BASE_ADDR);
 
             Rectangle rect = new Rectangle(0, 0, 640, 480);
-            BitmapData bitmapData = frameBuffer.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+            BitmapData bitmapData = frameBuffer.LockBits(rect, ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             int* bitmapPointer = (int*)bitmapData.Scan0.ToPointer();
 
             // Load the SOL register - a lines
@@ -275,7 +285,7 @@ namespace FoenixIDE.Display
 
                     for (int x = 0; x < 640; x++)
                     {
-                        int resetValue = x < borderXSize || x > 640 - borderXSize ? borderColor : backgroundColor;
+                        int resetValue = x < borderXSize || x >= 640 - borderXSize ? borderColor : backgroundColor;
                         ptr[x] = resetValue;
                     }
 
@@ -313,11 +323,70 @@ namespace FoenixIDE.Display
                 }
                 
             }
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
             frameBuffer.UnlockBits(bitmapData);
-            e.Graphics.DrawImage(frameBuffer, ClientRectangle);
+            //e.Graphics.DrawImage(frameBuffer, ClientRectangle);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp);
+
+            DrawImage();
+            glControl1.SwapBuffers();
+
             drawing = false;
             drawWatch.Stop();
             Debug.WriteLine("Draw Time: " + drawWatch.Elapsed.TotalMilliseconds + "ms");
+        }
+
+        private int texture;
+        public void DrawImage()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.PushMatrix();
+            GL.LoadIdentity();
+            int width = glControl1.Width;
+            int height = glControl1.Height;
+
+            GL.Ortho(0, width, height, 0, -1, 1);
+
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.PushMatrix();
+            GL.LoadIdentity();
+
+            GL.Disable(EnableCap.Lighting);
+
+            GL.Enable(EnableCap.Texture2D);
+
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+
+            GL.Begin(BeginMode.Quads);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(0, 0, 0);
+
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(width, 0, 0);
+
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(width, height, 0);
+
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(0, height, 0);
+
+            GL.End();
+
+            GL.Disable(EnableCap.Texture2D);
+            GL.PopMatrix();
+
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.PopMatrix();
+
+            GL.MatrixMode(MatrixMode.Modelview);
         }
 
         //public static byte[] LoadGammaCorrection_DontUse(MemoryRAM VKY)
@@ -481,10 +550,12 @@ namespace FoenixIDE.Display
             int* ptr = p + pixelOffset;
             
             VRAM.CopyIntoBuffer(offsetAddress, values, 0, 640);
+            int LUTAddressOffset = MemoryMap.GRP_LUT_BASE_ADDR - MemoryMap.VICKY_BASE_ADDR + lutIndex * 256 * 4;
             for (int col = borderXSize; col < (width - borderXSize); col++)
             {
                 pixVal = values[col];
                 colorVal = pixVal == 0 ? bgndColor : getLUTValue(lutIndex, pixVal);
+                
                 if (gammaCorrection)
                 {
                     colorVal = (int)((VICKY.ReadByte(MemoryMap.GAMMA_BASE_ADDR - MemoryMap.VICKY_BASE_ADDR + (colorVal & 0x00FF0000) >> 0x10) << 0x10) +
@@ -705,6 +776,15 @@ namespace FoenixIDE.Display
 
         bool CursorState = true;
 
+        private void glControl1_Load(object sender, EventArgs e)
+        {
+            GL.ClearColor(Color.MidnightBlue);
+
+            GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+
+            GL.GenTextures(1, out texture);
+        }
+
         public bool TileEditorMode
         {
             get
@@ -715,6 +795,11 @@ namespace FoenixIDE.Display
             {
                 tileEditorMode = value;
             }
+        }
+
+        private void glControl1_Resize(object sender, EventArgs e)
+        {
+            GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
         }
     }
 }
