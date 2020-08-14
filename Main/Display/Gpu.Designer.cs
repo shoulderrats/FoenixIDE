@@ -7,6 +7,8 @@
         /// </summary>
         private global::System.ComponentModel.IContainer components = null;
 
+        private OpenTK.GLControl glControl1;
+
         /// <summary> 
         /// Clean up any resources being used.
         /// </summary>
@@ -63,7 +65,5 @@
         }
 
         #endregion
-
-        private OpenTK.GLControl glControl1;
     }
 }
