@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace FoenixIDE.Display
 {
@@ -44,7 +39,7 @@ namespace FoenixIDE.Display
         public int Length;
         public MemoryLocations.MemoryRAM CharacterData;
         //private int charWidth = 8;
-        private int charHeight = 8;
+        private readonly int charHeight = 8;
 
         /// <summary>
         /// Returns a single row (byte) in the character data. 
@@ -70,12 +65,12 @@ namespace FoenixIDE.Display
         public void Load(string Filename, int Offset, MemoryLocations.MemoryRAM Vram, int StartAddress, SizeCodes newCharSize)
         {
             this.StartAddress = StartAddress;
-            this.CharSize = newCharSize;
-            this.CharacterData = Vram;
+            CharSize = newCharSize;
+            CharacterData = Vram;
 
             try
             {
-                byte[] d = global::System.IO.File.ReadAllBytes(Filename);
+                byte[] d = System.IO.File.ReadAllBytes(Filename);
                 Vram.Load(d, Offset, StartAddress, d.Length - Offset);
             }
             catch (Exception ex)

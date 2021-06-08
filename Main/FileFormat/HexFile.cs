@@ -17,7 +17,7 @@ namespace FoenixIDE.Simulator.FileFormat
 
             if (!System.IO.File.Exists(Filename))
             {
-                OpenFileDialog f = new OpenFileDialog
+                OpenFileDialog f = new()
                 {
                     Title = "Select a kernel file",
                     Filter = "Hex Files|*.hex|All Files|*.*"
@@ -31,7 +31,7 @@ namespace FoenixIDE.Simulator.FileFormat
                     return null;
                 }
             }
-                
+
 
             string[] lines = System.IO.File.ReadAllLines(processedFileName);
 
@@ -43,8 +43,8 @@ namespace FoenixIDE.Simulator.FileFormat
                     string reclen = l.Substring(1, 2);
                     string offset = l.Substring(3, 4);
                     string rectype = l.Substring(7, 2);
-                    string data = l.Substring(9, l.Length - 11);
-                    string checksum = l.Substring(l.Length - 2);
+                    string data = l[9..^2];
+                    string checksum = l[^2..];
 
                     switch (rectype)
                     {
@@ -69,7 +69,7 @@ namespace FoenixIDE.Simulator.FileFormat
                                     address++;
                                 }
                             }
-                            
+
                             break;
 
                         // end of file - just ignore

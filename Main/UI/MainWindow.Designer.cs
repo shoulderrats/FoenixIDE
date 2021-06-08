@@ -19,6 +19,20 @@ namespace FoenixIDE.UI
             {
                 components.Dispose();
             }
+
+            //Dispose of objects manually to avoid disposal warning
+            debugWindow?.Dispose();
+            memoryWindow?.Dispose();
+            uploaderWindow?.Dispose();
+            watchWindow?.Dispose();
+            assetWindow?.Dispose();
+            sdCardWindow?.Dispose();
+            tileEditor?.Dispose();
+            charEditor?.Dispose();
+            terminal?.Dispose();
+            joystickWindow?.Dispose();
+            GGF?.Dispose();
+
             base.Dispose(disposing);
         }
 
@@ -100,8 +114,8 @@ namespace FoenixIDE.UI
             // toolStripRevision
             // 
             this.toolStripRevision.AutoSize = false;
-            this.toolStripRevision.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            this.toolStripRevision.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
             | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.toolStripRevision.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.toolStripRevision.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
@@ -140,8 +154,8 @@ namespace FoenixIDE.UI
             // 
             this.cpsPerf.AutoSize = false;
             this.cpsPerf.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.cpsPerf.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            this.cpsPerf.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
             | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.cpsPerf.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.cpsPerf.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -155,8 +169,8 @@ namespace FoenixIDE.UI
             // fpsPerf
             // 
             this.fpsPerf.AutoSize = false;
-            this.fpsPerf.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            this.fpsPerf.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
             | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.fpsPerf.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.fpsPerf.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -169,8 +183,8 @@ namespace FoenixIDE.UI
             // 
             // SDCardPath
             // 
-            this.SDCardPath.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
+            this.SDCardPath.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
             | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.SDCardPath.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.SDCardPath.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -354,7 +368,7 @@ namespace FoenixIDE.UI
             this.autorunEmulatorToolStripMenuItem.Padding = new System.Windows.Forms.Padding(0, 2, 0, 1);
             this.autorunEmulatorToolStripMenuItem.Size = new System.Drawing.Size(169, 23);
             this.autorunEmulatorToolStripMenuItem.Text = "Autorun Emulator";
-            this.autorunEmulatorToolStripMenuItem.Click += new System.EventHandler(this.autorunEmulatorToolStripMenuItem_Click);
+            this.autorunEmulatorToolStripMenuItem.Click += new System.EventHandler(this.AutorunEmulatorToolStripMenuItem_Click);
             // 
             // windowsToolStripMenuItem
             // 
@@ -403,7 +417,7 @@ namespace FoenixIDE.UI
             this.assetListToolStripMenuItem.Name = "assetListToolStripMenuItem";
             this.assetListToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.assetListToolStripMenuItem.Text = "Asset List";
-            this.assetListToolStripMenuItem.Click += new System.EventHandler(this.assetListToolStripMenuItem_Click);
+            this.assetListToolStripMenuItem.Click += new System.EventHandler(this.AssetListToolStripMenuItem_Click);
             // 
             // resetToolStripMenuItem
             // 
@@ -411,7 +425,7 @@ namespace FoenixIDE.UI
             this.RestartMenuItem,
             this.DebugMenuItem});
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
-            this.resetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
+            this.resetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt)
             | System.Windows.Forms.Keys.R)));
             this.resetToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.resetToolStripMenuItem.Text = "&Reset";

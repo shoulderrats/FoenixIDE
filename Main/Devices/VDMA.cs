@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FoenixIDE.Simulator.Devices
+﻿namespace FoenixIDE.Simulator.Devices
 {
     public class VDMA : MemoryLocations.MemoryRAM
     {
@@ -40,10 +33,6 @@ namespace FoenixIDE.Simulator.Devices
             // If the Enable and Transfer bits are set then do the transfer
             if ((Address == 0 || Address == 0x20) && (Value & 0x81) == 0x81)
             {
-                MemoryLocations.MemoryRAM srcMemory = null;
-                MemoryLocations.MemoryRAM destMemory = null;
-                int srcAddr = 0;
-                int destAddr = 0;
                 bool isSystemSource = (Address == 0 && (Value & 0x10) != 0) || (Address == 0x20);
                 bool isSystemDest = (Address == 0 && (Value & 0x20) != 0) || (Address == 0x20 && (Value & 0x10) == 0);
                 // RAM to VRAM is initiated by SDMA
@@ -53,8 +42,6 @@ namespace FoenixIDE.Simulator.Devices
                 }
                 bool isIODest = (Value & 0x30) != 0;
                 bool isFillTransfer = (Value & 4) != 0;
-                bool isSrcTransfer2D = false;
-                bool isDestTransfer2D = false;
 
                 // Setup variables
                 int sizeSrcX = isSystemSource ? ReadWord(0x28) : ReadWord(8); // Max 65535
@@ -69,6 +56,9 @@ namespace FoenixIDE.Simulator.Devices
                 destStride = destStride == 0 ? sizeSrcX : destStride;
 
 
+                MemoryLocations.MemoryRAM srcMemory;
+                int srcAddr;
+                bool isSrcTransfer2D;
                 // Check if the source is system or video
                 if (isSystemSource)
                 {
@@ -82,11 +72,15 @@ namespace FoenixIDE.Simulator.Devices
                     srcAddr = ReadLong(2); // Address $AF:0402
                     isSrcTransfer2D = (ReadByte(0) & 2) != 0;
                 }
+
+                MemoryLocations.MemoryRAM destMemory;
+                int destAddr;
+                bool isDestTransfer2D;
                 if (isSystemDest)
                 {
                     destAddr = ReadLong(0x25); // Address $AF:0425
                     destMemory = destAddr < 0x40_0000 ? System : Vicky;
-                    
+
                     if (destMemory == Vicky)
                     {
                         destAddr -= Vicky.StartAddress;
@@ -107,7 +101,7 @@ namespace FoenixIDE.Simulator.Devices
                     byte transferByte = ReadByte(1); // Address $AF:0401
 
                     // Linear or 2D
-                    if (!isDestTransfer2D) 
+                    if (!isDestTransfer2D)
                     {
                         int size1DTransfer = isSystemDest ? ReadLong(0x28) : ReadLong(8); // Address $AF:0408 - maximum 4MB
                         if (destMemory != null)
@@ -155,7 +149,7 @@ namespace FoenixIDE.Simulator.Devices
                             }
                         }
                     }
-                    
+
                     // Transfer data from memory to VRAM
                     if (!isDestTransfer2D)
                     {
@@ -182,7 +176,7 @@ namespace FoenixIDE.Simulator.Devices
                 // Raise an interrupt
                 if ((Value & 8) == 8)
                 {
-                
+
                 }
             }
         }

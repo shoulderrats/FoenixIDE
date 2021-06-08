@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Processor
 {
@@ -19,7 +15,7 @@ namespace FoenixIDE.Processor
         /// the top 8 bits are destroyed when the width is set to 8 bits. 
         /// </summary>
         public bool DiscardUpper = false;
-        readonly string[] formatWidth = new string[] { "X", "X1", "X2", "X3", "X4" };
+        //readonly string[] formatWidth = new string[] { "X", "X1", "X2", "X3", "X4" };
 
         //public enum int
         //{
@@ -32,7 +28,7 @@ namespace FoenixIDE.Processor
         {
             get
             {
-                return byteLength == 1 ? (int)(this._value & 0xff) : this._value;
+                return byteLength == 1 ? _value & 0xff : _value;
             }
 
             set
@@ -40,12 +36,12 @@ namespace FoenixIDE.Processor
                 if (byteLength == 1)
                 {
                     if (DiscardUpper)
-                        this._value = (int)(value & 0xff);
+                        _value = value & 0xff;
                     else
-                        this._value = (int)((value & 0xff) | (this._value & 0xff00));
+                        _value = (value & 0xff) | (_value & 0xff00);
                 }
                 else
-                    this._value = value & 0xffff;
+                    _value = value & 0xffff;
             }
         }
 
@@ -60,7 +56,7 @@ namespace FoenixIDE.Processor
         }
         public virtual int Low
         {
-            get { return (int)(this._value & 0xff); }
+            get { return _value & 0xff; }
             //set { this.Value = (int)((this.Value & 0xff00) | (value & 0xff)); }
         }
 
@@ -86,12 +82,12 @@ namespace FoenixIDE.Processor
         {
             get
             {
-                return this.byteLength;
+                return byteLength;
             }
 
             set
             {
-                this.byteLength = value;
+                byteLength = value;
             }
         }
 
@@ -139,15 +135,12 @@ namespace FoenixIDE.Processor
 
         public override string ToString()
         {
-            switch (byteLength)
+            return byteLength switch
             {
-                case 2:
-                    return "$" + Value.ToString("X4");
-                case 1:
-                    return "$" + Value.ToString("X2");
-                default:
-                    return Value.ToString();
-            }
+                2 => "$" + Value.ToString("X4"),
+                1 => "$" + Value.ToString("X2"),
+                _ => Value.ToString(),
+            };
         }
 
         /// <summary>
@@ -157,12 +150,12 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(int Address)
         {
-            if (this.byteLength == 2)
-                return (this.Value << 8) | Address;
-            else if (this.byteLength == 1)
-                return (this.Value << 16) | Address;
+            if (byteLength == 2)
+                return (Value << 8) | Address;
+            else if (byteLength == 1)
+                return (Value << 16) | Address;
             else
-                return this.Value;
+                return Value;
         }
 
         /// <summary>
@@ -172,19 +165,19 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         public virtual int GetLongAddress(Register Address)
         {
-            if (this.byteLength == 2)
-                return (this.Value << 8) | Address.Value;
-            else if (this.byteLength == 1)
-                return (this.Value << 16) | Address.Value;
+            if (byteLength == 2)
+                return (Value << 8) | Address.Value;
+            else if (byteLength == 1)
+                return (Value << 16) | Address.Value;
             else
-                return this.Value;
+                return Value;
         }
 
         public virtual void Reset()
         {
-            this.TopOfStack = DefaultStackValue;
-            this.Value = DefaultStackValue;
-            this.byteLength = 2;
+            TopOfStack = DefaultStackValue;
+            Value = DefaultStackValue;
+            byteLength = 2;
         }
     }
 
@@ -214,7 +207,7 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         public int GetLongAdddress(int address)
         {
-            return (this.Value << 8) | address;
+            return (Value << 8) | address;
         }
 
         /// <summary>
@@ -225,7 +218,7 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         public int GetLongAdddress(Register index)
         {
-            return (this.Value << 8) | index.Value;
+            return (Value << 8) | index.Value;
         }
     }
 
@@ -281,7 +274,8 @@ namespace FoenixIDE.Processor
             return _LV | Address;
         }
 
-        public override int Value {
+        public override int Value
+        {
             get => base.Value;
             set
             {
@@ -317,7 +311,7 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         public override int GetLongAddress(int address)
         {
-            return this.Value + address;
+            return Value + address;
         }
 
     }

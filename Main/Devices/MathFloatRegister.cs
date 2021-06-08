@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Simulator.Devices
 {
@@ -11,8 +7,8 @@ namespace FoenixIDE.Simulator.Devices
      */
     public class MathFloatRegister : MemoryLocations.MemoryRAM
     {
-        byte[] inputData = new byte[16];
-        byte[] outputData = new byte[16];
+        readonly byte[] inputData = new byte[16];
+        readonly byte[] outputData = new byte[16];
 
         public MathFloatRegister(int StartAddress, int Length) : base(StartAddress, Length)
         {
@@ -33,7 +29,7 @@ namespace FoenixIDE.Simulator.Devices
         {
             byte CTRL0 = inputData[0];
             byte CTRL1 = (byte)(inputData[1] & 3);
-            float input0 = 0, input1 = 0;
+            float input0;
             if ((CTRL0 & 1) != 0)
             {
                 uint raw = BitConverter.ToUInt32(inputData, 8);
@@ -43,6 +39,8 @@ namespace FoenixIDE.Simulator.Devices
             {
                 input0 = BitConverter.ToSingle(inputData, 8);
             }
+
+            float input1;
             if ((CTRL0 & 2) != 0)
             {
                 uint raw = BitConverter.ToUInt32(inputData, 12);
@@ -60,7 +58,7 @@ namespace FoenixIDE.Simulator.Devices
             try
             {
                 FPDiv = input0 / input1;
-                outputData[5] = (byte)(((FPDiv == 0) ? 8 : 0) + ((FPDiv is float.NaN) ? 1 : 0 ));
+                outputData[5] = (byte)(((FPDiv == 0) ? 8 : 0) + ((FPDiv is float.NaN) ? 1 : 0));
             }
             catch (DivideByZeroException)
             {
@@ -126,7 +124,7 @@ namespace FoenixIDE.Simulator.Devices
         }
 
         // We're looking at the LSB 12 bits to determine the fractional portion
-        private float ConvertFixedtoFP(uint value)
+        private static float ConvertFixedtoFP(uint value)
         {
             float fractional = 0;
             float bit = 0.5f;
@@ -138,7 +136,7 @@ namespace FoenixIDE.Simulator.Devices
             return (value >> 12) + fractional;
         }
 
-        private uint ConvertFPtoFixed(float value)
+        private static uint ConvertFPtoFixed(float value)
         {
             int intVal = (int)value;
             float remainder = value - intVal;

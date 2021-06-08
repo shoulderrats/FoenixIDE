@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FoenixIDE.Processor
+﻿namespace FoenixIDE.Processor
 {
     public class RegisterAccumulator : Register
     {
         public int Value16
         {
-            get { return this._value; }
-            set { this._value = value; }
+            get { return _value; }
+            set { _value = value; }
         }
     }
 }

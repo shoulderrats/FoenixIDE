@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.CharEditor
@@ -14,19 +10,19 @@ namespace FoenixIDE.CharEditor
         byte[] clipData = null;
         byte[] FontData = new byte[8 * 256];
         byte[] characterData = new byte[16];
-        bool[,] grid = new bool[8, 8];
+        readonly bool[,] grid = new bool[8, 8];
         int CharIndex = 0;
-        int Columns = 8;
+        readonly int Columns = 8;
         int Rows = 8;
-        Color Color0 = Color.Black;
-        Color Color1 = Color.LightGreen;
+        readonly Color Color0 = Color.Black;
+        //readonly Color Color1 = Color.LightGreen;
         MouseButtons MouseHeld = MouseButtons.None;
         bool ColorHeld = false;
 
         public event EventHandler CharacterSaved;
 
-        Brush textBrush = new SolidBrush(Color.LightGreen);
-        Pen borderPen = new Pen(Color.DarkGray);
+        readonly Brush textBrush = new SolidBrush(Color.LightGreen);
+        readonly Pen borderPen = new(Color.DarkGray);
 
         public EditControl()
         {
@@ -36,7 +32,7 @@ namespace FoenixIDE.CharEditor
         internal void LoadCharacter(byte[] FontData, int selectedIndex, int bytesPerCharacter)
         {
             this.FontData = FontData;
-            this.CharIndex = selectedIndex;
+            CharIndex = selectedIndex;
             Rows = bytesPerCharacter;
 
             LoadCharacter();
@@ -90,13 +86,13 @@ namespace FoenixIDE.CharEditor
 
         private Point GetPixel(Point location)
         {
-            Rectangle pixel = new Rectangle(
+            Rectangle pixel = new(
                 0,
                 0,
                 characterPanel.ClientRectangle.Width / Columns,
                 characterPanel.ClientRectangle.Height / Rows);
 
-            Point p = new Point
+            Point p = new()
             {
                 X = location.X / pixel.Width,
                 Y = location.Y / pixel.Height
@@ -134,9 +130,9 @@ namespace FoenixIDE.CharEditor
                 else
                     p.BackColor = Color0;
             }
-            
 
-            
+
+
         }
 
         private void Save_Click(object sender, EventArgs e)
@@ -274,7 +270,7 @@ namespace FoenixIDE.CharEditor
 
         private void CharacterPanel_Paint(object sender, PaintEventArgs e)
         {
-            Rectangle pixel = new Rectangle(
+            Rectangle pixel = new(
                 0,
                 0,
                 characterPanel.ClientRectangle.Width / Columns,

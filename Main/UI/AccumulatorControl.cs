@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using FoenixIDE.Processor;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using FoenixIDE.Processor;
 
 namespace FoenixIDE.UI
 {
@@ -20,15 +14,15 @@ namespace FoenixIDE.UI
 
         string _caption;
         string _value;
-        FoenixIDE.Processor.RegisterAccumulator _register = null;
+        RegisterAccumulator _register = null;
 
         public string Caption
         {
-            get { return this._caption; }
+            get { return _caption; }
             set
             {
-                this._caption = value;
-                this.label1.Text = value;
+                _caption = value;
+                label1.Text = value;
             }
         }
 
@@ -36,12 +30,12 @@ namespace FoenixIDE.UI
         {
             get
             {
-                return this._value;
+                return _value;
             }
 
             set
             {
-                this._value = value;
+                _value = value;
                 if (_register == null || _register.Width == 1)
                 {
                     regB.ForeColor = SystemColors.Info;
@@ -52,8 +46,8 @@ namespace FoenixIDE.UI
                     regB.ForeColor = SystemColors.WindowText;
                     regB.BackColor = SystemColors.Window;
                 }
-                this.regB.Text = value.Substring(0, 2);
-                this.regA.Text = value.Substring(2, 2);
+                regB.Text = value.Substring(0, 2);
+                regA.Text = value.Substring(2, 2);
             }
         }
 
@@ -62,12 +56,12 @@ namespace FoenixIDE.UI
         {
             get
             {
-                return this._register;
+                return _register;
             }
 
             set
             {
-                this._register = value;
+                _register = value;
                 if (value != null)
                 {
                     UpdateValue();
@@ -80,7 +74,7 @@ namespace FoenixIDE.UI
         {
             if (Register != null)
             {
-                this.Value = _register.Value16.ToString("X4");
+                Value = _register.Value16.ToString("X4");
             }
         }
     }

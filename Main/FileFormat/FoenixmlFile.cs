@@ -1,11 +1,6 @@
-﻿using FoenixIDE.MemoryLocations;
-using FoenixIDE.Simulator.Devices;
-using FoenixIDE.Simulator.FileFormat;
-using FoenixIDE.UI;
+﻿using FoenixIDE.Simulator.Devices;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using static FoenixIDE.Simulator.FileFormat.ResourceChecker;
 
@@ -14,10 +9,10 @@ namespace FoenixIDE.Simulator.FileFormat
     class FoeniXmlFile
     {
         private const int PHRASE_LENGTH = 16;
-        private Processor.Breakpoints BreakPoints;
-        private SortedList<int, DebugLine> codeList;
-        private FoenixSystem kernel;
-        private SortedList<int, WatchedMemory> watchList;
+        private readonly Processor.Breakpoints BreakPoints;
+        private readonly SortedList<int, DebugLine> codeList;
+        private readonly FoenixSystem kernel;
+        private readonly SortedList<int, WatchedMemory> watchList;
         public BoardVersion Version;
 
         private FoeniXmlFile() { }
@@ -25,15 +20,15 @@ namespace FoenixIDE.Simulator.FileFormat
         public FoeniXmlFile(FoenixSystem kernel, ResourceChecker resources)
         {
             this.kernel = kernel;
-            this.codeList = kernel.lstFile.Lines;
-            this.BreakPoints = kernel.Breakpoints;
+            codeList = kernel.lstFile.Lines;
+            BreakPoints = kernel.Breakpoints;
             watchList = kernel.WatchList;
         }
-        private static string tabs = "\t\t\t\t\t\t\t\t";
+        private static readonly string tabs = "\t\t\t\t\t\t\t\t";
         public void Write(String filename, bool compact)
         {
             XmlWriter xmlWriter = XmlWriter.Create(filename);
-            
+
             xmlWriter.WriteStartDocument();
             xmlWriter.WriteRaw("\r");
             xmlWriter.WriteComment("Export of FoenixIDE for C256.  All values are in hexadecimal form");
@@ -48,7 +43,7 @@ namespace FoenixIDE.Simulator.FileFormat
             xmlWriter.WriteRaw(tabs.Substring(0, 1));
             xmlWriter.WriteStartElement("resources");
             xmlWriter.WriteRaw("\r");
-            foreach (ResourceChecker.Resource res in kernel.ResCheckerRef.Items)
+            foreach (Resource res in kernel.ResCheckerRef.Items)
             {
                 xmlWriter.WriteRaw(tabs.Substring(0, 2));
                 xmlWriter.WriteStartElement("resource");
@@ -175,7 +170,7 @@ namespace FoenixIDE.Simulator.FileFormat
             xmlWriter.WriteRaw(tabs.Substring(0, 1));
             xmlWriter.WriteStartElement("video");
             xmlWriter.WriteRaw("\r");
-            foreach (ResourceChecker.Resource res in kernel.ResCheckerRef.Items)
+            foreach (Resource res in kernel.ResCheckerRef.Items)
             {
                 // If the assets were loaded in RAM, they would have been saved already
                 if (res.StartAddress >= 0xB0_0000)
@@ -199,7 +194,7 @@ namespace FoenixIDE.Simulator.FileFormat
             xmlWriter.Close();
         }
 
-        public  void WriteWatches(string filename)
+        public void WriteWatches(string filename)
         {
             XmlWriter xmlWriter = XmlWriter.Create(filename);
             string tabs = "\t\t\t\t\t\t\t\t";
@@ -242,7 +237,7 @@ namespace FoenixIDE.Simulator.FileFormat
                     {
                         int address = Convert.ToInt32(reader.GetAttribute("address"), 16);
                         string name = reader.GetAttribute("label");
-                        WatchedMemory mem = new WatchedMemory(name, address, 0, 0);
+                        WatchedMemory mem = new(name, address, 0, 0);
                         if (watchList.ContainsKey(address))
                         {
                             watchList.Remove(address);
@@ -329,7 +324,7 @@ namespace FoenixIDE.Simulator.FileFormat
                     }
                     if (reader.Name.Equals("resource"))
                     {
-                        ResourceChecker.Resource res = new ResourceChecker.Resource
+                        Resource res = new()
                         {
                             Name = reader.GetAttribute("name"),
                             SourceFile = reader.GetAttribute("source"),
@@ -357,7 +352,7 @@ namespace FoenixIDE.Simulator.FileFormat
                             string label = reader.GetAttribute("label");
                             string source = reader.GetAttribute("source");
                             string command = reader.GetAttribute("command");
-                            DebugLine code = new DebugLine(address);
+                            DebugLine code = new(address);
                             code.SetLabel(label);
                             code.SetMnemonic(source);
                             code.SetOpcodes(command);
@@ -366,7 +361,7 @@ namespace FoenixIDE.Simulator.FileFormat
                                 codeList.Remove(address);
                             }
                             codeList.Add(address, code);
-                         
+
                         }
                         continue;
                     }
@@ -381,7 +376,7 @@ namespace FoenixIDE.Simulator.FileFormat
                         String version = reader.GetAttribute("version");
                         if (version != null)
                         {
-                            Enum.TryParse<BoardVersion>(version, out Version);
+                            Enum.TryParse(version, out Version);
                         }
                         continue;
                     }
@@ -389,7 +384,7 @@ namespace FoenixIDE.Simulator.FileFormat
                     {
                         int address = Convert.ToInt32(reader.GetAttribute("address"), 16);
                         string name = reader.GetAttribute("label");
-                        WatchedMemory mem = new WatchedMemory(name, address, 0, 0);
+                        WatchedMemory mem = new(name, address, 0, 0);
                         if (watchList.ContainsKey(address))
                         {
                             watchList.Remove(address);
@@ -403,7 +398,7 @@ namespace FoenixIDE.Simulator.FileFormat
 
         public void LoadMemory(String address, String values)
         {
-            int addr = Convert.ToInt32(address.Replace("$",""), 16);
+            int addr = Convert.ToInt32(address.Replace("$", ""), 16);
             //Each byte is written as 3 characters (2 Hex and a space)
             if (values.Length % 3 == 0)
             {

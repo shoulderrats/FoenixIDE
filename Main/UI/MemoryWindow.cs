@@ -1,14 +1,9 @@
-﻿using FoenixIDE.Simulator.FileFormat;
-using FoenixIDE.MemoryLocations;
+﻿using FoenixIDE.MemoryLocations;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Xml;
 using System.IO;
+using System.Text;
+using System.Windows.Forms;
 
 namespace FoenixIDE.UI
 {
@@ -83,14 +78,14 @@ namespace FoenixIDE.UI
         }
         public void RefreshMemoryView()
         {
-            StringBuilder s = new StringBuilder();
+            StringBuilder s = new();
             if (Memory == null)
                 return;
             //MemoryText.Clear();
             // Display 16 bytes per line
             for (int i = StartAddress; i < EndAddress; i += 0x10)
             {
-                s.Append(">");
+                s.Append('>');
                 if (Memory is MemoryRAM)
                 {
                     s.Append((i + Memory.StartAddress).ToString("X6"));
@@ -99,9 +94,9 @@ namespace FoenixIDE.UI
                 {
                     s.Append(i.ToString("X6"));
                 }
-                
+
                 s.Append("  ");
-                StringBuilder text = new StringBuilder();
+                StringBuilder text = new();
                 for (int j = 0; j < 16; j++)
                 {
                     if (i + j < Memory.Length)
@@ -111,33 +106,33 @@ namespace FoenixIDE.UI
 
                         // Character data
                         if (c < 32 || c > 127)
-                            text.Append(".");
+                            text.Append('.');
                         else
                             text.Append((char)c);
                     }
                     else
                     {
                         s.Append("--");
-                        text.Append("-");
+                        text.Append('-');
                     }
-                    s.Append(" ");
+                    s.Append(' ');
 
-                    
+
 
                     // Group 8 bytes together
                     if (j == 7 || j == 15)
                     {
-                        s.Append(" ");
-                        text.Append(" ");
+                        s.Append(' ');
+                        text.Append(' ');
                     }
-                    
+
                 }
                 s.Append(text);
                 if ((i - StartAddress) < 256)
                 {
                     s.AppendLine();
                 }
-                
+
             }
             MemoryText.Text = s.ToString();
         }
@@ -160,13 +155,13 @@ namespace FoenixIDE.UI
         {
             try
             {
-                int requestedAddress = Convert.ToInt32(this.StartAddressText.Text, 16) & 0xFFFF00;
+                int requestedAddress = Convert.ToInt32(StartAddressText.Text, 16) & 0xFFFF00;
                 GotoAddress(requestedAddress);
                 FindMatchedDropDownEntry(requestedAddress);
             }
-            catch (global::System.FormatException ex)
+            catch (FormatException ex)
             {
-                global::System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
@@ -184,15 +179,15 @@ namespace FoenixIDE.UI
                         EndAddress = Memory.Length;
                     }
                 }
-                this.StartAddressText.Text = (StartAddress + Memory.StartAddress).ToString("X6");
-                this.EndAddressText.Text = (EndAddress + Memory.StartAddress).ToString("X6");
+                StartAddressText.Text = (StartAddress + Memory.StartAddress).ToString("X6");
+                EndAddressText.Text = (EndAddress + Memory.StartAddress).ToString("X6");
             }
             else
             {
-                this.StartAddress = requestedAddress;
-                this.EndAddress = requestedAddress + PageSize;
-                this.StartAddressText.Text = requestedAddress.ToString("X6");
-                this.EndAddressText.Text = EndAddress.ToString("X6");
+                StartAddress = requestedAddress;
+                EndAddress = requestedAddress + PageSize;
+                StartAddressText.Text = requestedAddress.ToString("X6");
+                EndAddressText.Text = EndAddress.ToString("X6");
             }
 
             HighlightPanel.Visible = false;
@@ -206,11 +201,10 @@ namespace FoenixIDE.UI
 
         private void FindMatchedDropDownEntry(int address)
         { // find the address in the dropdown list
-            int dropdownAddress = 0;
             bool matched = false;
             foreach (string item in AddressCombo.Items)
             {
-                dropdownAddress = 0;
+                int dropdownAddress = 0;
                 if (item.StartsWith("Bank"))
                 {
                     int start = item.IndexOf('$');
@@ -237,7 +231,7 @@ namespace FoenixIDE.UI
         private void NextButton_Click(object sender, EventArgs e)
         {
             // Move Down by one page
-            int desiredStart = Convert.ToInt32(this.StartAddressText.Text, 16) + 256;
+            int desiredStart = Convert.ToInt32(StartAddressText.Text, 16) + 256;
             if (desiredStart < MemoryMap.FLASH_END)
             {
                 GotoAddress(desiredStart);
@@ -247,7 +241,7 @@ namespace FoenixIDE.UI
 
         private void PreviousButton_Click(object sender, EventArgs e)
         {
-            int desiredStart = Convert.ToInt32(this.StartAddressText.Text, 16) - 256;
+            int desiredStart = Convert.ToInt32(StartAddressText.Text, 16) - 256;
             if (desiredStart >= 0)
             {
                 GotoAddress(desiredStart);
@@ -258,7 +252,7 @@ namespace FoenixIDE.UI
         private void AddressCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             String value = (String)AddressCombo.SelectedItem;
-            int startAddress = 0;
+            int startAddress;
             if (value.StartsWith("Bank"))
             {
                 // Read two characters and pad with '0000' to get a 24 bit address
@@ -283,10 +277,11 @@ namespace FoenixIDE.UI
         {
             if (e.KeyCode == Keys.PageDown)
             {
-                this.NextButton_Click(sender, e);
-            } else if (e.KeyCode == Keys.PageUp)
+                NextButton_Click(sender, e);
+            }
+            else if (e.KeyCode == Keys.PageUp)
             {
-                this.PreviousButton_Click(sender, e);
+                PreviousButton_Click(sender, e);
             }
         }
 
@@ -294,7 +289,7 @@ namespace FoenixIDE.UI
          * Change the Master Control Register (MCR).
          * This allows for displaying text, overlay on top of graphics.
          */
-                private void MCRBitButton_Click(object sender, EventArgs e)
+        private void MCRBitButton_Click(object sender, EventArgs e)
         {
             // toggle the button tag 0 or 1
             Button btn = ((Button)sender);
@@ -306,7 +301,7 @@ namespace FoenixIDE.UI
             else
             {
                 btn.Tag = 0;
-                btn.BackColor = Control.DefaultBackColor;
+                btn.BackColor = DefaultBackColor;
             }
             // Save the value of all buttons to the Master Control Memory Location
             int value = ((int)MCRBit0Button.Tag);
@@ -368,10 +363,10 @@ namespace FoenixIDE.UI
                 SetHiRes?.Invoke(newHires != 0);
             }
             SetMCRButton(MCRBit9Button, (value & 0x02) != 0);
-            
+
         }
 
-        private void SetMCRButton(Button btn, bool value)
+        private static void SetMCRButton(Button btn, bool value)
         {
             if (value)
             {
@@ -381,7 +376,7 @@ namespace FoenixIDE.UI
             else
             {
                 btn.Tag = 0;
-                btn.BackColor = Control.DefaultBackColor;
+                btn.BackColor = DefaultBackColor;
             }
         }
 
@@ -393,7 +388,7 @@ namespace FoenixIDE.UI
                 String val = mem.Y.ToString("X2");
 
                 String address = mem.X.ToString("X6");
-                PositionLabel.Text = "Adress: $" + address.Substring(0, 2) + ":" + address.Substring(2) + ", Value: " + val; // + ", X: " + e.X + ", Y: " + e.Y + ", Col: " + col + ", Line: " + line;
+                PositionLabel.Text = "Adress: $" + address.Substring(0, 2) + ":" + address[2..] + ", Value: " + val; // + ", X: " + e.X + ", Y: " + e.Y + ", Col: " + col + ", Line: " + line;
             }
             else
             {
@@ -401,7 +396,7 @@ namespace FoenixIDE.UI
             }
         }
 
-        Point mem = new Point(-1,-1);
+        Point mem = new(-1, -1);
         // Retrieve the memory location of the mouse location
         private void GetAddressPosition(Point mouse)
         {
@@ -465,7 +460,7 @@ namespace FoenixIDE.UI
             if (mem.X != -1)
             {
                 String rawAddress = mem.X.ToString("X6");
-                String address = "$" + rawAddress.Substring(0, 2) + ":" + rawAddress.Substring(2);
+                String address = "$" + rawAddress.Substring(0, 2) + ":" + rawAddress[2..];
                 if (HighlightPanel.Text != "")
                 {
                     // The result may be a hexadecimal value

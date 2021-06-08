@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.GameGenerator
 {
@@ -49,7 +47,7 @@ namespace FoenixIDE.GameGenerator
 
     public class TokenDefinition
     {
-        private Regex _regex;
+        private readonly Regex _regex;
         private readonly TokenType _returnsToken;
         private readonly int _precedence;
 
@@ -77,10 +75,10 @@ namespace FoenixIDE.GameGenerator
             }
         }
 
-        private List<string> GroupsToString(GroupCollection mGroups)
+        private static List<string> GroupsToString(GroupCollection mGroups)
         {
-            List<string> g = new List<string>();
-            for (int i=1;i< mGroups.Count;i++)
+            List<string> g = new();
+            for (int i = 1; i < mGroups.Count; i++)
             {
                 string val = mGroups[i].Value;
                 // Replace : in Hex values, like $B0:1234 to $B0_1234
@@ -102,10 +100,10 @@ namespace FoenixIDE.GameGenerator
 
     public class FoenixLexer
     {
-        private readonly List<Asset> assets = new List<Asset>();
-        private readonly Dictionary<string, List<TokenMatch>> subs = new Dictionary<string, List<TokenMatch>>();
-        private readonly List<TokenDefinition> _tokenDefinitions = new List<TokenDefinition>();
-        private readonly List<TokenMatch> tokenMatches = new List<TokenMatch>();
+        private readonly List<Asset> assets = new();
+        private readonly Dictionary<string, List<TokenMatch>> subs = new();
+        private readonly List<TokenDefinition> _tokenDefinitions = new();
+        private readonly List<TokenMatch> tokenMatches = new();
 
         public FoenixLexer(string code)
         {
@@ -138,7 +136,7 @@ namespace FoenixIDE.GameGenerator
             {
                 tokenMatches.AddRange(td.FindMatches(code).ToList());
             }
-            
+
             foreach (TokenMatch tm in tokenMatches.OrderBy(x => x.StartIndex).ToList())
             {
                 switch (tm.TokenType)
@@ -160,13 +158,13 @@ namespace FoenixIDE.GameGenerator
                                 tm.TokenType = TokenType.SCOPY;
                             }
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
                             // Lookup the token for an address
                         }
                         break;
                     case TokenType.SUB:
-                        
+
                         tokenMatches.Remove(tm);
                         // Move tokens that are between start and end index
                         List<TokenMatch> functionSub = tokenMatches.FindAll(m => m.StartIndex > tm.StartIndex && m.EndIndex < tm.EndIndex);
@@ -194,8 +192,7 @@ namespace FoenixIDE.GameGenerator
 
         public List<TokenMatch> GetSub(string fname)
         {
-            List<TokenMatch> result;
-            subs.TryGetValue(fname, out result);
+            subs.TryGetValue(fname, out List<TokenMatch> result);
             return result;
         }
     }

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Processor
 {
@@ -78,7 +75,7 @@ namespace FoenixIDE.Processor
             }
         }
 
-        public UInt16 GetFlags(params bool[] flags)
+        public static UInt16 GetFlags(params bool[] flags)
         {
             UInt16 bits = 0;
             for (int i = 0; i < flags.Length; i++)

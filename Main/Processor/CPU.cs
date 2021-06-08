@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FoenixIDE.MemoryLocations;
+using System;
 using System.Threading;
-using System.Threading.Tasks;
-using FoenixIDE;
-using FoenixIDE.MemoryLocations;
 
 namespace FoenixIDE.Processor
 {
@@ -15,14 +11,14 @@ namespace FoenixIDE.Processor
     /// </summary>
     public partial class CPU
     {
-        const int BANKSIZE = 0x10000;
-        const int PAGESIZE = 0x100;
-        private OpcodeList opcodes = null;
+        //const int BANKSIZE = 0x10000;
+        //const int PAGESIZE = 0x100;
+        private readonly OpcodeList opcodes = null;
 
         public OpCode CurrentOpcode = null;
         public int SignatureBytes = 0;
 
-        public CPUPins Pins = new CPUPins();
+        public CPUPins Pins = new();
 
         /// <summary>
         /// When true, the CPU will not execute the next instruction. Used by the debugger
@@ -65,12 +61,12 @@ namespace FoenixIDE.Processor
         {
             get
             {
-                return this.clockSpeed;
+                return clockSpeed;
             }
 
             set
             {
-                this.clockSpeed = value;
+                clockSpeed = value;
             }
         }
 
@@ -96,7 +92,7 @@ namespace FoenixIDE.Processor
             MemMgr = mm;
             clockSpeed = 14000000;
             clockCyles = 0;
-            Operations operations = new Operations(this);
+            Operations operations = new(this);
             operations.SimulatorCommand += Operations_SimulatorCommand;
             opcodes = new OpcodeList(operations, this);
             Flags.Emulation = true;
@@ -137,9 +133,9 @@ namespace FoenixIDE.Processor
         {
             if (Pins.Ready_)
                 return false;
-            
 
-            if (this.Pins.GetInterruptPinActive)
+
+            if (Pins.GetInterruptPinActive)
             {
                 if (ServiceHardwareInterrupt())
                 {
@@ -174,7 +170,7 @@ namespace FoenixIDE.Processor
         {
             if (CPUThread != null && CPUThread.ThreadState == ThreadState.Running)
             {
-                CPUThread.Abort();
+                CPUThread.Abort(); //Should use a 'cooperative' cancellation token instead of deprecated Abort().
                 CPUThread = null;
             }
         }
@@ -227,9 +223,9 @@ namespace FoenixIDE.Processor
                 Flags.accumulatorShort = true;
                 Flags.xRegisterShort = true;
             }
-            A.Width = Flags.accumulatorShort? 1 : 2;
-            X.Width = Flags.xRegisterShort? 1 : 2;
-            Y.Width = Flags.xRegisterShort? 1 : 2;
+            A.Width = Flags.accumulatorShort ? 1 : 2;
+            X.Width = Flags.xRegisterShort ? 1 : 2;
+            Y.Width = Flags.xRegisterShort ? 1 : 2;
         }
 
         /// <summary>
@@ -242,17 +238,13 @@ namespace FoenixIDE.Processor
 
         public int ReadSignature(int length, int pc)
         {
-            switch (length)
+            return length switch
             {
-                case 2:
-                    return MemMgr.RAM.ReadByte(pc + 1);
-                case 3:
-                    return MemMgr.RAM.ReadWord(pc + 1);
-                case 4:
-                    return MemMgr.RAM.ReadLong(pc + 1);
-            }
-
-            return 0;
+                2 => MemMgr.RAM.ReadByte(pc + 1),
+                3 => MemMgr.RAM.ReadWord(pc + 1),
+                4 => MemMgr.RAM.ReadLong(pc + 1),
+                _ => 0,
+            };
         }
 
         /// <summary>
@@ -261,53 +253,53 @@ namespace FoenixIDE.Processor
         /// </summary>
         public int CycleCounter
         {
-            get { return this.clockCyles; }
+            get { return clockCyles; }
         }
 
         #region support routines
-        /// <summary>
-        /// Gets the address pointed to by a pointer in the data bank.
-        /// </summary>
-        /// <param name="baseAddress"></param>
-        /// <param name="Index"></param>
-        /// <returns></returns>
-        private int GetPointerLocal(int baseAddress, Register Index = null)
-        {
-            int addr = DataBank.GetLongAddress(baseAddress);
-            if (Index != null)
-                addr += Index.Value;
-            return addr;
-        }
+        ///// <summary>
+        ///// Gets the address pointed to by a pointer in the data bank.
+        ///// </summary>
+        ///// <param name="baseAddress"></param>
+        ///// <param name="Index"></param>
+        ///// <returns></returns>
+        //private int GetPointerLocal(int baseAddress, Register Index = null)
+        //{
+        //    int addr = DataBank.GetLongAddress(baseAddress);
+        //    if (Index != null)
+        //        addr += Index.Value;
+        //    return addr;
+        //}
 
-        /// <summary>
-        /// Gets the address pointed to by a pointer in Direct page.
-        /// be in the Direct Page. The address returned will be DBR+Pointer.
-        /// </summary>
-        /// <param name="baseAddress"></param>
-        /// <param name="Index"></param>
-        /// <returns></returns>
-        private int GetPointerDirect(int baseAddress, Register Index = null)
-        {
-            int addr = DirectPage.Value + baseAddress;
-            if (Index != null)
-                addr += Index.Value;
-            int pointer = MemMgr.ReadWord(addr);
-            return DataBank.GetLongAddress(pointer);
-        }
+        ///// <summary>
+        ///// Gets the address pointed to by a pointer in Direct page.
+        ///// be in the Direct Page. The address returned will be DBR+Pointer.
+        ///// </summary>
+        ///// <param name="baseAddress"></param>
+        ///// <param name="Index"></param>
+        ///// <returns></returns>
+        //private int GetPointerDirect(int baseAddress, Register Index = null)
+        //{
+        //    int addr = DirectPage.Value + baseAddress;
+        //    if (Index != null)
+        //        addr += Index.Value;
+        //    int pointer = MemMgr.ReadWord(addr);
+        //    return DataBank.GetLongAddress(pointer);
+        //}
 
-        /// <summary>
-        /// Gets the address pointed to by a pointer referenced by a long address.
-        /// </summary>
-        /// <param name="baseAddress">24-bit address</param>
-        /// <param name="Index"></param>
-        /// <returns></returns>
-        private int GetPointerLong(int baseAddress, Register Index = null)
-        {
-            int addr = baseAddress;
-            if (Index != null)
-                addr += Index.Value;
-            return DataBank.GetLongAddress(MemMgr.ReadWord(addr));
-        }
+        ///// <summary>
+        ///// Gets the address pointed to by a pointer referenced by a long address.
+        ///// </summary>
+        ///// <param name="baseAddress">24-bit address</param>
+        ///// <param name="Index"></param>
+        ///// <returns></returns>
+        //private int GetPointerLong(int baseAddress, Register Index = null)
+        //{
+        //    int addr = baseAddress;
+        //    if (Index != null)
+        //        addr += Index.Value;
+        //    return DataBank.GetLongAddress(MemMgr.ReadWord(addr));
+        //}
 
         #endregion
 
@@ -339,7 +331,7 @@ namespace FoenixIDE.Processor
             PC = addr;
         }
 
-        public byte GetByte(int Value, int Offset)
+        public static byte GetByte(int Value, int Offset)
         {
             if (Offset == 0)
                 return (byte)(Value & 0xff);
@@ -376,7 +368,7 @@ namespace FoenixIDE.Processor
                 throw new Exception("bytes must be between 1 and 3. got " + bytes.ToString());
 
             int ret = MemMgr.Read(Stack.Value + 1, bytes);
-            
+
             Stack.Value += bytes;
             return ret;
         }
@@ -412,7 +404,7 @@ namespace FoenixIDE.Processor
                 Interrupt(InteruptTypes.ABORT);
                 return true;
             }
-            else if (this.Pins.Reset)
+            else if (Pins.Reset)
             {
                 DebugPause = true;
                 Pins.Reset = false;
@@ -435,7 +427,7 @@ namespace FoenixIDE.Processor
             {
                 Push(PC & 0xFFFF, 2);
             }
-            
+
             Push(Flags);
 
             int addr;

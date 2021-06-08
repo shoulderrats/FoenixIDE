@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using System.Text;
-using System.Threading.Tasks;
-
 namespace FoenixIDE.Processor
 {
     public class Breakpoints : SortedList<int, string>
@@ -15,10 +12,10 @@ namespace FoenixIDE.Processor
         /// <returns></returns>
         bool CheckBP(int Address)
         {
-            if (this.Count == 0)
+            if (Count == 0)
                 return false;
 
-            if (this.ContainsKey(Address))
+            if (ContainsKey(Address))
                 return true;
 
             return false;
@@ -30,17 +27,17 @@ namespace FoenixIDE.Processor
             return GetHex(val);
         }
 
-        public string GetHex(int value)
+        public static string GetHex(int value)
         {
             String val = value.ToString("X6");
-            return "$" + val.Substring(0,2) + ":"+ val.Substring(2);
+            return "$" + val.Substring(0, 2) + ":" + val[2..];
         }
 
-        public int GetIntFromHex(string Hex)
+        public static int GetIntFromHex(string Hex)
         {
             try
             {
-                int ret = Convert.ToInt32(Hex.Replace("$","").Replace(":", ""), 16);
+                int ret = Convert.ToInt32(Hex.Replace("$", "").Replace(":", ""), 16);
                 return ret;
             }
             catch (Exception)
@@ -54,13 +51,13 @@ namespace FoenixIDE.Processor
             try
             {
                 int Addr = GetIntFromHex(HexAddress);
-                this.Add(Addr, GetHex(Addr));
+                Add(Addr, GetHex(Addr));
                 return Addr;
             }
             catch (Exception ex)
             {
-                global::System.Diagnostics.Debug.WriteLine("Breakpoints.Add(" + HexAddress + ")");
-                global::System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Breakpoints.Add(" + HexAddress + ")");
+                System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
                 return -1;
             }
         }
@@ -70,27 +67,27 @@ namespace FoenixIDE.Processor
             try
             {
                 int Addr = GetIntFromHex(HexAddress);
-                if (this.ContainsKey(Addr))
-                    this.Remove(Addr);
+                if (ContainsKey(Addr))
+                    Remove(Addr);
             }
             catch (Exception ex)
             {
-                global::System.Diagnostics.Debug.WriteLine("Breakpoints.Remove(" + HexAddress + ")");
-                global::System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Breakpoints.Remove(" + HexAddress + ")");
+                System.Diagnostics.Debug.WriteLine("Message:  " + ex.Message);
             }
         }
 
         public string[] GetHexArray()
         {
-            string[] ret = new string[this.Count];
-            this.Values.CopyTo(ret, 0);
+            string[] ret = new string[Count];
+            Values.CopyTo(ret, 0);
             return ret;
         }
 
         public int[] GetIntArray()
         {
-            int[] ret = new int[this.Count];
-            this.Keys.CopyTo(ret, 0);
+            int[] ret = new int[Count];
+            Keys.CopyTo(ret, 0);
             return ret;
         }
     }

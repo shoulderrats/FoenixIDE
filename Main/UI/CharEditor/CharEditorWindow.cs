@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.CharEditor
@@ -19,7 +13,8 @@ namespace FoenixIDE.CharEditor
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveFileDialog f = new SaveFileDialog {
+            SaveFileDialog f = new()
+            {
                 Filter = "ROM file|*.bin|PNG Image|*.png|BMP Image|*.bmp|All Files|*.*"
             };
             if (f.ShowDialog() == DialogResult.OK)
@@ -28,7 +23,7 @@ namespace FoenixIDE.CharEditor
                 switch (ext)
                 {
                     case ".bin":
-                        charViewer1.SaveBin(f.FileName, charViewer1.FontData);
+                        CharViewer.SaveBin(f.FileName, charViewer1.FontData);
                         break;
                     case ".png":
                     case ".bmp":
@@ -42,7 +37,7 @@ namespace FoenixIDE.CharEditor
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog f = new OpenFileDialog
+            OpenFileDialog f = new()
             {
                 Filter = "Image Files (*.BMP *.PNG *.BIN)|*.BMP;*.PNG;*.BIN|ROM file|*.bin|PNG Image|*.png|BMP Image|*.bmp|All Files|*.*"
             };
@@ -52,7 +47,7 @@ namespace FoenixIDE.CharEditor
                 switch (ext)
                 {
                     case ".bin":
-                        charViewer1.FontData = charViewer1.LoadBin(f.FileName);
+                        charViewer1.FontData = CharViewer.LoadBin(f.FileName);
                         break;
                     case ".png":
                     case ".bmp":
@@ -114,7 +109,7 @@ namespace FoenixIDE.CharEditor
         {
             if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                Close();
             }
         }
     }

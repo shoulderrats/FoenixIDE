@@ -1,10 +1,5 @@
 ﻿using FoenixIDE.MemoryLocations;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.Simulator.UI
@@ -21,7 +16,7 @@ namespace FoenixIDE.Simulator.UI
         {
             if (gabe != null)
             {
-                gabe.WriteByte(MemoryLocations.MemoryMap.JOYSTICK0 - MemoryLocations.MemoryMap.GABE_START + joystick, value);
+                gabe.WriteByte(MemoryMap.JOYSTICK0 - MemoryMap.GABE_START + joystick, value);
             }
         }
 
@@ -31,7 +26,7 @@ namespace FoenixIDE.Simulator.UI
         private void JoystickForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true; // this cancels the close event.
-            this.Hide();
+            Hide();
         }
         /*
          * Keyboard Down - the form receives key events
@@ -40,7 +35,7 @@ namespace FoenixIDE.Simulator.UI
         {
             if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                Close();
             }
             byte value = 0;
             switch (e.KeyCode)

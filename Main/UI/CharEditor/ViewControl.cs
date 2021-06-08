@@ -1,28 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
 
 namespace FoenixIDE.CharEditor
 {
     public partial class CharViewer : UserControl
     {
         const int CHARSET_SIZE = 2048;
-        
-        Brush textBrush = Brushes.LightGray;  //new SolidBrush(SystemColors.WindowText);
-        Brush selectedBrush = Brushes.Gray;
-        Pen pen = Pens.Gray;
+        readonly Brush textBrush = Brushes.LightGray;  //new SolidBrush(SystemColors.WindowText);
+        readonly Brush selectedBrush = Brushes.Gray;
+        readonly Pen pen = Pens.Gray;
 
         public int BitsPerRow = 8;
         public int BytesPerCharacter = 8;
-
-        int Columns = 16;
-        int Rows = 16;
+        readonly int Columns = 16;
+        readonly int Rows = 16;
         int Col1X = 28;
         int Row1Y = 28;
         int CharacterWidth = 12;
@@ -46,49 +39,44 @@ namespace FoenixIDE.CharEditor
 
         public MouseButtons MouseButton { get; private set; }
 
-        public byte[] LoadBin(string Filename)
+        public static byte[] LoadBin(string Filename)
         {
-            if (!System.IO.File.Exists(Filename))
+            if (!File.Exists(Filename))
                 return new byte[CHARSET_SIZE];
 
-            BinaryReader br = new System.IO.BinaryReader(new FileStream(Filename, FileMode.Open));
+            BinaryReader br = new(new FileStream(Filename, FileMode.Open));
             byte[] data = br.ReadBytes(CHARSET_SIZE);
-            
+
             return data;
         }
 
-        public void SaveBin(string Filename, byte[] data)
+        public static void SaveBin(string Filename, byte[] data)
         {
-            System.IO.File.WriteAllBytes(Filename, data);
+            File.WriteAllBytes(Filename, data);
         }
 
         public byte[] LoadPNG(string Filename)
         {
-            if (!System.IO.File.Exists(Filename))
+            if (!File.Exists(Filename))
                 return new byte[CHARSET_SIZE];
 
             byte[] data = new byte[CHARSET_SIZE];
-            Bitmap img = Image.FromFile(Filename) as Bitmap;
-            if (img == null)
+            if (Image.FromFile(Filename) is not Bitmap img)
                 throw new Exception("Not a bitmap file");
 
             int pos = 0;
-            int x = 0;
-            int y = 32;
-            int bit = 128;
-            int row = 0;
-
+            int y;
             for (y = 0; y < img.Height; y += BytesPerCharacter)
             {
+                int x;
                 for (x = 0; x < img.Width; x += 8)
                 {
                     for (int cy = y; cy < y + BytesPerCharacter; cy++)
                     {
-                        row = 0;
-                        bit = 128;
+                        int row = 0;
+                        int bit = 128;
                         for (int cx = x; cx < x + 8; cx++)
                         {
-
                             var pixel = img.GetPixel(cx, cy);
                             if (pixel.R > 0)
                                 row |= bit;
@@ -141,11 +129,6 @@ namespace FoenixIDE.CharEditor
         {
         }
 
-        private void DrawCharSet(byte[] data, Graphics g, int StartX, int StartY)
-        {
-
-        }
-
         private void CharViewer_Paint(object sender, PaintEventArgs e)
         {
             int StartX = 0;
@@ -157,10 +140,6 @@ namespace FoenixIDE.CharEditor
             }
 
             int characters = FontData.Length / BytesPerCharacter;
-            int x0 = StartX;
-            int x = x0;
-            int y0 = StartY;
-            int y = y0;
             int bitWidth = 2;
             int bitHeight = 2;
             CharacterWidth = bitWidth * 8 + 4;
@@ -175,15 +154,15 @@ namespace FoenixIDE.CharEditor
 
             if (ShowSelected)
             {
-                e.Graphics.DrawString(SelectedIndex.ToString(), this.Font, textBrush, 0, 0);
+                e.Graphics.DrawString(SelectedIndex.ToString(), Font, textBrush, 0, 0);
             }
 
-            x = Col1X;
-            y = StartY;
+            int x = Col1X;
+            int y = StartY;
             for (int i = 0; i < Columns; i++)
             {
                 e.Graphics.DrawLine(pen, x - 2, Row1Y - 4, x - 2, lastRow);
-                e.Graphics.DrawString(" " + i.ToString("X"), this.Font, textBrush, x, y);
+                e.Graphics.DrawString(" " + i.ToString("X"), Font, textBrush, x, y);
                 x += CharacterWidth;
             }
             e.Graphics.DrawLine(pen, x - 2, Row1Y - 4, x - 2, lastRow);
@@ -193,7 +172,7 @@ namespace FoenixIDE.CharEditor
             for (int i = 0; i < Rows; i++)
             {
                 e.Graphics.DrawLine(pen, Col1X - 4, y - 2, lastCol, y - 2);
-                e.Graphics.DrawString(i.ToString("X") + "0", this.Font, textBrush, x, y);
+                e.Graphics.DrawString(i.ToString("X") + "0", Font, textBrush, x, y);
                 y += CharacterHeight;
             }
             e.Graphics.DrawLine(pen, Col1X - 4, y - 2, lastCol, y - 2);
@@ -202,8 +181,7 @@ namespace FoenixIDE.CharEditor
             y = Row1Y;
             for (int i = 0; i < characters; i++)
             {
-                x0 = x;
-                y0 = y;
+                int x0 = x;
                 if (i >= SelectedIndex && i < SelectedIndex + SelectionLength)
                 {
                     e.Graphics.FillRectangle(selectedBrush, x - 2, y - 2, CharacterWidth, CharacterHeight);
@@ -227,7 +205,7 @@ namespace FoenixIDE.CharEditor
                     y += bitHeight;
                 }
                 x = Col1X + ((i + 1) % Columns * CharacterWidth);
-                y = Row1Y + ((int)(i + 1) / Rows) * CharacterHeight;
+                y = Row1Y + ((i + 1) / Rows) * CharacterHeight;
 
             }
         }
@@ -313,12 +291,12 @@ namespace FoenixIDE.CharEditor
                 Refresh();
                 OnCharacterSelected();
             }
-            this.MouseButton = 0;
+            MouseButton = 0;
         }
 
         private void CharViewer_MouseMove(object sender, MouseEventArgs e)
         {
-            Point p = new Point
+            Point p = new()
             {
                 X = (e.X - Col1X) / CharacterWidth,
                 Y = (e.Y - Row1Y) / CharacterHeight
@@ -336,7 +314,7 @@ namespace FoenixIDE.CharEditor
         {
             if (e.Button == MouseButtons.Left)
             {
-                this.MouseButton = e.Button;
+                MouseButton = e.Button;
                 CharViewer_MouseMove(sender, e);
                 SelectedIndex = HoveredChar;
                 SelectionLength = 1;
@@ -346,11 +324,11 @@ namespace FoenixIDE.CharEditor
 
         protected void OnCharacterSelected()
         {
-            if (this.CharacterSelected == null)
+            if (CharacterSelected == null)
                 return;
 
-            EventArgs e = new EventArgs();
-            this.CharacterSelected(this, e);
+            EventArgs e = new();
+            CharacterSelected(this, e);
         }
     }
 }

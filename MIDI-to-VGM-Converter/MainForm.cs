@@ -1,20 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MIDI_to_VGM_Converter
 {
     public enum FileType
     {
-        SINGLE_MULTI_CHNL_TRACK, 
+        SINGLE_MULTI_CHNL_TRACK,
         SIMULTANEOUS_TRACKS,
         INDEPENDENT_SEQ_TRACKS
     }
@@ -46,7 +40,7 @@ namespace MIDI_to_VGM_Converter
 
         private void ReadFileButton_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Filter = "MIDI Files (*.mid *.midi)| *.mid;*.midi"
             };
@@ -55,7 +49,7 @@ namespace MIDI_to_VGM_Converter
                 RunningStatus = 0;
                 events = new List<MidiEvent>();
                 FileLabel.Text = dialog.FileName;
-                FileInfo info = new FileInfo(dialog.FileName);
+                FileInfo info = new(dialog.FileName);
                 int fileLength = (int)info.Length;
                 Stream file = dialog.OpenFile();
 
@@ -82,7 +76,7 @@ namespace MIDI_to_VGM_Converter
             if (buffer[0] == 'M' && buffer[1] == 'T' && buffer[2] == 'h' && buffer[3] == 'd')
             {
                 // Read the header length - big endian
-                int headerLength = buffer[7] + (buffer[6] <<8) + (buffer[5] <<16) + (buffer[4] << 24);
+                int headerLength = buffer[7] + (buffer[6] << 8) + (buffer[5] << 16) + (buffer[4] << 24);
                 short filetype = (short)(buffer[9] + (buffer[8] << 8));
                 trackCount = (short)(buffer[11] + (buffer[10] << 8));
                 short division = (short)(buffer[13] + (buffer[12] << 8));
@@ -122,7 +116,7 @@ namespace MIDI_to_VGM_Converter
                 sb.AppendLine("-----------------------------------");
 
                 tracks = new Track[trackCount];
-                for (int i = 0; i< trackCount; i++)
+                for (int i = 0; i < trackCount; i++)
                 {
                     tracks[i] = new Track()
                     {
@@ -161,10 +155,10 @@ namespace MIDI_to_VGM_Converter
 
         private void ReadTracks()
         {
-            
+
             // Read Track 0
             ReadTrack(0);
-            for (int i = 1; i < trackCount; i ++)
+            for (int i = 1; i < trackCount; i++)
             {
                 ReadTrack(i);
             }
@@ -188,9 +182,9 @@ namespace MIDI_to_VGM_Converter
                 // Read the variable-length delta time
                 int deltatime = ReadVarInt(ptr + offset, out int varlen);
                 totalTime += deltatime;
-                
 
-                MidiEvent ev = new MidiEvent()
+
+                MidiEvent ev = new()
                 {
                     deltaTime = deltatime,
                     wait = samplesPerTick * deltatime,
@@ -238,7 +232,7 @@ namespace MIDI_to_VGM_Converter
                         offset += varlen + 1;
                         break;
                 }
-                
+
             }
             return totalTime;
         }
@@ -247,7 +241,7 @@ namespace MIDI_to_VGM_Converter
         {
             int len = 0;
             int value = 0;
-            bool done = false;
+            bool done;
             do
             {
                 value = (value << 7) + (buffer[ptr + len] & 0x7F);
@@ -284,7 +278,7 @@ namespace MIDI_to_VGM_Converter
                     break;
                 case 5:
                     string lyric = ReadText(ptr, length);
-                    sb.Append("Lyric Name: ").Append(lyric.ToString());
+                    sb.Append("Lyric Name: ").Append(lyric);
                     break;
                 case 6:
                     string marker = ReadText(ptr, length);
@@ -296,11 +290,11 @@ namespace MIDI_to_VGM_Converter
                     break;
                 case 0x20:
                     byte channel = buffer[ptr];
-                    sb.Append("Channel Event: ").Append(channel.ToString());
+                    sb.Append("Channel Event: ").Append(channel);
                     break;
                 case 0x21:
                     byte port = buffer[ptr];
-                    sb.Append("MIDI Port: ").Append(port.ToString());
+                    sb.Append("MIDI Port: ").Append(port);
                     break;
                 case 0x2F:
                     sb.Append("End of Track Event");
@@ -310,15 +304,15 @@ namespace MIDI_to_VGM_Converter
                     BPM = 60_000_000 / microSecondsPerQuarter;
                     sb.Append("Set Tempo Event: BPM ").Append(BPM).AppendLine();
                     sb.Append("\tSet Tempo Event: ms per quarter ").Append(microSecondsPerQuarter).AppendLine();
-                    samplesPerTick = (int)(microSecondsPerQuarter / ticksPerQuarter * samplesPerSecond / 1000000);
+                    samplesPerTick = microSecondsPerQuarter / ticksPerQuarter * samplesPerSecond / 1000000;
                     sb.Append("\tSet Tempo Event: samples per tick ").Append(samplesPerTick).AppendLine();
                     break;
                 case 0x54:
                     int SMPTEOffset = 0; // hr mn se fr ff
-                    sb.Append("Set SMPTE Offset Event: ").Append(SMPTEOffset.ToString());
+                    sb.Append("Set SMPTE Offset Event: ").Append(SMPTEOffset);
                     break;
                 case 0x58:
-                    TimeSignature ts = new TimeSignature()
+                    TimeSignature ts = new()
                     {
                         numerator = buffer[ptr],
                         denominator = buffer[ptr + 1],
@@ -334,10 +328,10 @@ namespace MIDI_to_VGM_Converter
                     string sig = (majMin == 0 ? "Major" : "Minor");
                     string key = majMin == 0 ? "C" : "a";
 
-                    switch(sharpFlats)
+                    switch (sharpFlats)
                     {
                         case -1:
-                            key = majMin == 0 ? "F": "d";
+                            key = majMin == 0 ? "F" : "d";
                             break;
                         case -2:
                             key = majMin == 0 ? "B♭" : "g";
@@ -357,7 +351,7 @@ namespace MIDI_to_VGM_Converter
                         case -7:
                             key = majMin == 0 ? "B" : "g♯";
                             break;
-                        
+
                         case 1:
                             key = majMin == 0 ? "G" : "e";
                             break;
@@ -380,7 +374,7 @@ namespace MIDI_to_VGM_Converter
                             key = majMin == 0 ? "C♯" : "a♯";
                             break;
                     }
-                    
+
                     sb.Append("Key Signature Event: ").AppendFormat("{0} {1}", key, sig);
                     break;
                 case 0x7F:
@@ -396,7 +390,7 @@ namespace MIDI_to_VGM_Converter
 
         private string ReadText(int ptr, int length)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int offset = 0;
             while (offset < length)
             {
@@ -408,11 +402,11 @@ namespace MIDI_to_VGM_Converter
 
         private string ReadBinary(int ptr, int length)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int offset = 0;
             while (offset < length)
             {
-                sb.Append(buffer[ptr + offset].ToString("X2")).Append(" ");
+                sb.Append(buffer[ptr + offset].ToString("X2")).Append(' ');
                 offset++;
             }
             return sb.ToString();
@@ -453,8 +447,8 @@ namespace MIDI_to_VGM_Converter
                     varlen = 2;
                     break;
                 case 0xB:
-                    byte ctrlr = buffer[ptr + 1];
-                    byte value = buffer[ptr + 2];
+                    //byte ctrlr = buffer[ptr + 1];
+                    //byte value = buffer[ptr + 2];
                     sb.AppendFormat("Control  Channel: {0,2}, Note: {1,3}, Velocity: {2,3}", channel, note, velocity).AppendLine();
                     varlen = 2;
                     break;
@@ -491,19 +485,19 @@ namespace MIDI_to_VGM_Converter
 
         public static byte[] ChannelKSL = new byte[18];
         // midi channel to opl3 channel map - $F0 is unassigned, $FF is not played.
-        public static byte[] channelMap = new byte[16];  
+        public static byte[] channelMap = new byte[16];
 
         private void GenerateVGMButton_Click(object sender, EventArgs e)
         {
             // Print all events
             events.Sort(new MidiEventComparer());
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             // First pass - map midi channels to OPL3 channels
             byte fourOps = 0;
             byte twoOps = 0;
-            List<byte> availableChannels = new List<byte>();
+            List<byte> availableChannels = new();
             availableChannels.Add(0);
             availableChannels.Add(1);
             availableChannels.Add(2);
@@ -589,11 +583,11 @@ namespace MIDI_to_VGM_Converter
                 availableChannels.Remove(top);
             }
             byte OPL3Mode = (byte)(fourOps != 0 ? 1 : 0);
-            byte connectionSel = (byte)(Math.Pow(2, fourOps) -1);
-            
+            //byte connectionSel = (byte)(Math.Pow(2, fourOps) - 1);
+
             int totalWaits = 0;
             int totalBytes = 0;
-            MemoryStream ms = new MemoryStream();
+            MemoryStream ms = new();
             // set the machine in OPL3 mode - no timers
             byte[] initialRegister = {
                 0x5f, 5, OPL3Mode,     // OPL3 mode
@@ -658,7 +652,7 @@ namespace MIDI_to_VGM_Converter
                 }
                 if (SingleChannel.SelectedIndex == 0 || (SingleChannel.SelectedIndex - 1 == ev.midiChannel))
                 {
-                    sb.Append(ev.index).Append("\t").Append(ev).AppendLine();
+                    sb.Append(ev.index).Append('\t').Append(ev).AppendLine();
                     byte[] partial = ev.GetBytes();
                     if (partial != null)
                     {
@@ -679,7 +673,7 @@ namespace MIDI_to_VGM_Converter
             {
                 File.Delete(vgmFileName);
             }
-            FileStream stream = new FileStream(vgmFileName, FileMode.CreateNew);
+            FileStream stream = new(vgmFileName, FileMode.CreateNew);
             byte[] header = GetVGMHeader(totalWaits, totalBytes + 0x80, gd3.Length);
             stream.Write(header, 0, header.Length);
             // write data
@@ -693,7 +687,7 @@ namespace MIDI_to_VGM_Converter
         }
 
         // prepare the VGM header
-        private byte[] GetVGMHeader(int totalWaits, int totalBytes, int gd3Length)
+        private static byte[] GetVGMHeader(int totalWaits, int totalBytes, int gd3Length)
         {
             byte[] vgmHeader = new byte[0x80];
             vgmHeader[0] = (byte)'V';
@@ -732,7 +726,7 @@ namespace MIDI_to_VGM_Converter
             return vgmHeader;
         }
 
-        private byte[] CreateGD3()
+        private static byte[] CreateGD3()
         {
             byte[] buffer = new byte[100];
             buffer[0] = (byte)'G';

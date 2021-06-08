@@ -1,13 +1,7 @@
-﻿using FoenixIDE.MemoryLocations;
-using FoenixIDE.Simulator.FileFormat;
+﻿using FoenixIDE.Simulator.FileFormat;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.UI
@@ -66,7 +60,7 @@ namespace FoenixIDE.UI
                         e.Value = kvp.Value.val16bit.ToString("X4");
                         break;
                 }
-                
+
             }
             catch
             {
@@ -109,7 +103,7 @@ namespace FoenixIDE.UI
                     {
                         kernel_ref.WatchList.Remove(addressVal);
                     }
-                    WatchedMemory mem = new WatchedMemory(NameText.Text, addressVal,
+                    WatchedMemory mem = new(NameText.Text, addressVal,
                         kernel_ref.MemMgr.ReadByte(addressVal),
                         kernel_ref.MemMgr.ReadWord(addressVal)
                     );
@@ -125,7 +119,7 @@ namespace FoenixIDE.UI
         {
             if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                Close();
             }
         }
 

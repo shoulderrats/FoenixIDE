@@ -2,16 +2,11 @@
 using FoenixIDE.Simulator.FileFormat;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.IO.Ports;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using static FoenixIDE.Simulator.FileFormat.ResourceChecker;
-using static FoenixIDE.UI.MainWindow;
 
 namespace FoenixIDE.UI
 {
@@ -68,23 +63,23 @@ namespace FoenixIDE.UI
             LoadAddressTextBox.Enabled = !LUTSelected;
             if (FileTypesCombo.SelectedItem.ToString().StartsWith("LUT"))
             {
-                int lut = Convert.ToInt32(FileTypesCombo.SelectedItem.ToString().Substring(4));
+                int lut = Convert.ToInt32(FileTypesCombo.SelectedItem.ToString()[4..]);
                 LoadAddressTextBox.Enabled = false;
-                LoadAddressTextBox.Text = (MemoryLocations.MemoryMap.GRP_LUT_BASE_ADDR + lut * 1024).ToString("X6");
+                LoadAddressTextBox.Text = (MemoryMap.GRP_LUT_BASE_ADDR + lut * 1024).ToString("X6");
             }
         }
 
-        private String FormatAddress(int address)
+        private static String FormatAddress(int address)
         {
             String size = (address).ToString("X6");
-            return "$" + size.Substring(0, 2) + ":" + size.Substring(2);
+            return "$" + size.Substring(0, 2) + ":" + size[2..];
         }
         /*
          * Let the user select a file from the file system and display it in a text box.
          */
         private void BrowseFileButton_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDlg = new OpenFileDialog
+            OpenFileDialog openFileDlg = new()
             {
                 Title = "Load Bitmap",
                 DefaultExt = ".bin",
@@ -95,7 +90,7 @@ namespace FoenixIDE.UI
             if (openFileDlg.ShowDialog() == DialogResult.OK)
             {
                 FileNameTextBox.Text = openFileDlg.FileName;
-                FileInfo info = new FileInfo(FileNameTextBox.Text);
+                FileInfo info = new(FileNameTextBox.Text);
                 ExtLabel.Text = info.Extension;
                 FileSizeResultLabel.Text = FormatAddress((int)info.Length);
                 StoreButton.Enabled = true;
@@ -108,11 +103,11 @@ namespace FoenixIDE.UI
 
             // Store the address in the pointer address - little endian - 24 bits
             int destAddress = Convert.ToInt32(LoadAddressTextBox.Text.Replace(":", ""), 16);
-            FileInfo info = new FileInfo(FileNameTextBox.Text);
+            //FileInfo info = new(FileNameTextBox.Text);
             byte MCRHigh = (byte)(MemMgrRef.VICKY.ReadByte(1) & 3);
             int screenResX = 640;
             int screenResY = 480;
-            switch(MCRHigh)
+            switch (MCRHigh)
             {
                 case 1:
                     screenResX = 800;
@@ -128,16 +123,17 @@ namespace FoenixIDE.UI
                     break;
             }
 
-            ResourceType operationType = ResourceType.raw;
             int conversionStride = 0;
             int maxHeight = screenResY;
+
+            ResourceType operationType;
             if (FileTypesCombo.SelectedIndex < 2)
             {
                 operationType = ResourceType.bitmap;
                 conversionStride = screenResX;
             }
             else if (FileTypesCombo.SelectedIndex < 6)
-            { 
+            {
                 operationType = ResourceType.tilemap;
                 ExtLabel.Text = ".data";
             }
@@ -159,7 +155,7 @@ namespace FoenixIDE.UI
                 ExtLabel.Text = ".data";
             }
 
-            ResourceChecker.Resource res = new ResourceChecker.Resource
+            Resource res = new()
             {
                 StartAddress = destAddress,
                 SourceFile = FileNameTextBox.Text,
@@ -171,11 +167,11 @@ namespace FoenixIDE.UI
             switch (ExtLabel.Text.ToLower())
             {
                 case ".png":
-                    Bitmap png = new Bitmap(FileNameTextBox.Text, false);
+                    Bitmap png = new(FileNameTextBox.Text, false);
                     ConvertBitmapToRaw(png, res, (byte)LUTCombo.SelectedIndex, conversionStride, maxHeight);
                     break;
                 case ".bmp":
-                    Bitmap bmp = new Bitmap(FileNameTextBox.Text, false);
+                    Bitmap bmp = new(FileNameTextBox.Text, false);
                     ConvertBitmapToRaw(bmp, res, (byte)LUTCombo.SelectedIndex, conversionStride, maxHeight);
                     break;
                 default:
@@ -198,24 +194,24 @@ namespace FoenixIDE.UI
             {
                 // write address offset by bank $b0
                 int imageAddress = destAddress - 0xB0_0000;
-                int regAddress = -1;
                 byte lutValue = (byte)LUTCombo.SelectedIndex;
 
+                int regAddress;
                 // Determine which addresses to store the bitmap into.
                 if (FileTypesCombo.SelectedIndex < 2)
                 {
                     // Bitmaps
-                    regAddress = MemoryLocations.MemoryMap.BITMAP_CONTROL_REGISTER_ADDR + FileTypesCombo.SelectedIndex * 8;
+                    regAddress = MemoryMap.BITMAP_CONTROL_REGISTER_ADDR + FileTypesCombo.SelectedIndex * 8;
                     // enable the bitmap - TODO add the LUT
-                    MemMgrRef.WriteByte(regAddress,(byte)(1 + lutValue * 2));
-                    
+                    MemMgrRef.WriteByte(regAddress, (byte)(1 + lutValue * 2));
+
                 }
                 else if (FileTypesCombo.SelectedIndex < 6)
                 {
                     // Tilemaps 4
                     int tilemapIndex = FileTypesCombo.SelectedIndex - 1;
-                    regAddress = MemoryLocations.MemoryMap.TILE_CONTROL_REGISTER_ADDR + tilemapIndex * 12;
-                    
+                    regAddress = MemoryMap.TILE_CONTROL_REGISTER_ADDR + tilemapIndex * 12;
+
                     // enable the tilemap
                     MemMgrRef.WriteByte(regAddress, (byte)(1 + (lutValue << 1)));
 
@@ -225,7 +221,7 @@ namespace FoenixIDE.UI
                 {
                     // Tilesets 8
                     int tilesetIndex = FileTypesCombo.SelectedIndex - 5;
-                    regAddress = MemoryLocations.MemoryMap.TILESET_BASE_ADDR + tilesetIndex * 4;
+                    regAddress = MemoryMap.TILESET_BASE_ADDR + tilesetIndex * 4;
 
                     MemMgrRef.WriteByte(regAddress + 3, lutValue);  // TODO: Add the stride 256 bit 3.
                 }
@@ -233,12 +229,12 @@ namespace FoenixIDE.UI
                 {
                     // Sprites 64
                     int spriteIndex = FileTypesCombo.SelectedIndex - 14;
-                    regAddress = MemoryLocations.MemoryMap.SPRITE_CONTROL_REGISTER_ADDR + spriteIndex * 8;
+                    regAddress = MemoryMap.SPRITE_CONTROL_REGISTER_ADDR + spriteIndex * 8;
 
                     // enable the tilemap
                     MemMgrRef.WriteByte(regAddress, (byte)(1 + (lutValue << 1)));  // TODO: Add sprite depth
                                                                                    // write address offset by bank $b0
-                    // Set the sprite at (32,32)
+                                                                                   // Set the sprite at (32,32)
                     MemMgrRef.WriteWord(regAddress + 4, 32);
                     MemMgrRef.WriteWord(regAddress + 6, 32);
                 }
@@ -251,10 +247,10 @@ namespace FoenixIDE.UI
             }
             if (res.Length != -1)
             {
-                this.DialogResult = DialogResult.OK;
+                DialogResult = DialogResult.OK;
                 if (FileTypesCombo.SelectedIndex > 1 && FileTypesCombo.SelectedIndex < 6)
                 {
-                    int layer = FileTypesCombo.SelectedIndex - 2;
+                    //int layer = FileTypesCombo.SelectedIndex - 2;
                     //OnTileLoaded?.Invoke(layer);
                 }
                 Close();
@@ -263,17 +259,17 @@ namespace FoenixIDE.UI
             {
                 // Keep the Asset Loader open
             }
-            
+
         }
 
-        private unsafe void ConvertBitmapToRaw(Bitmap bitmap, ResourceChecker.Resource resource, byte lutIndex, int stride, int maxHeight)
-        {             
+        private unsafe void ConvertBitmapToRaw(Bitmap bitmap, Resource resource, byte lutIndex, int stride, int maxHeight)
+        {
             if (ResChecker.Add(resource))
             {
-                
+
 
                 // Load LUT from memory - ignore indexes 0 and 1
-                int lutBaseAddress = MemoryLocations.MemoryMap.GRP_LUT_BASE_ADDR + lutIndex * 0x400 - MemoryLocations.MemoryMap.VICKY_BASE_ADDR;
+                int lutBaseAddress = MemoryMap.GRP_LUT_BASE_ADDR + lutIndex * 0x400 - MemoryMap.VICKY_BASE_ADDR;
 
                 // Limit how much data is imported based on the type of image
                 int importedLines = maxHeight < bitmap.Height ? maxHeight : bitmap.Height;
@@ -282,7 +278,7 @@ namespace FoenixIDE.UI
                 byte[] data = new byte[stride * importedLines]; // the bitmap is based on resolution of the machine
                 resource.Length = stride * bitmap.Height;  // one byte per pixel - palette is separate
 
-                Rectangle rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                Rectangle rect = new(0, 0, bitmap.Width, bitmap.Height);
                 BitmapData bitmapData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, bitmap.PixelFormat);
                 int bytesPerPixel = bitmapData.Stride / bitmap.Width;
                 byte* bitmapPointer = (byte*)bitmapData.Scan0.ToPointer();
@@ -326,7 +322,7 @@ namespace FoenixIDE.UI
                             {
                                 case 1:
                                     byte palIndex = bitmapPointer[line * bitmapData.Stride + col * bytesPerPixel];
-                                    System.Drawing.Color palValue = bitmap.Palette.Entries[palIndex];
+                                    Color palValue = bitmap.Palette.Entries[palIndex];
                                     b = palValue.B;
                                     g = palValue.G;
                                     r = palValue.R;
@@ -380,7 +376,7 @@ namespace FoenixIDE.UI
                         }
                     }
                 }
-                
+
                 int videoAddress = resource.StartAddress - 0xB0_0000;
 
                 MemMgrRef.VIDEO.CopyBuffer(data, 0, videoAddress, data.Length);
@@ -397,14 +393,15 @@ namespace FoenixIDE.UI
                 }
 
                 // Check if a LUT matching our index is present in the Resources, if so don't do anything.
-                Resource resLut = ResChecker.Find(ResourceType.lut, lutBaseAddress + MemoryLocations.MemoryMap.VICKY_BASE_ADDR);
-                if (resLut == null) {
-                    Resource lutPlaceholder = new Resource
+                Resource resLut = ResChecker.Find(ResourceType.lut, lutBaseAddress + MemoryMap.VICKY_BASE_ADDR);
+                if (resLut == null)
+                {
+                    Resource lutPlaceholder = new()
                     {
                         Length = 0x400,
                         FileType = ResourceType.lut,
                         Name = "Generated LUT",
-                        StartAddress = lutBaseAddress + MemoryLocations.MemoryMap.VICKY_BASE_ADDR
+                        StartAddress = lutBaseAddress + MemoryMap.VICKY_BASE_ADDR
                     };
                     ResChecker.Add(lutPlaceholder);
                 }
@@ -422,7 +419,7 @@ namespace FoenixIDE.UI
          */
         private void TransformBitmap(byte[] data, int startOffset, int pixelDepth, int lutPointer, int videoPointer, int width, int height)
         {
-            List<int> lut = new List<int>(256)
+            List<int> lut = new(256)
             {
                 // Always add black and white
                 0,
@@ -479,21 +476,21 @@ namespace FoenixIDE.UI
         {
             if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                Close();
             }
         }
 
 
-        private byte HighByte(int value)
+        private static byte HighByte(int value)
         {
             return ((byte)(value >> 16));
         }
 
-        private byte MidByte(int value)
+        private static byte MidByte(int value)
         {
             return ((byte)((value >> 8) & 0xFF));
         }
-        private byte LowByte(int value)
+        private static byte LowByte(int value)
         {
             return ((byte)(value & 0xFF));
         }

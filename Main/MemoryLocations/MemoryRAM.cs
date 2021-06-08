@@ -1,6 +1,4 @@
-﻿using FoenixIDE.Simulator.FileFormat;
-using FoenixIDE.MemoryLocations;
-using System;
+﻿using System;
 
 namespace FoenixIDE.MemoryLocations
 {
@@ -15,7 +13,7 @@ namespace FoenixIDE.MemoryLocations
         {
             get
             {
-                return this.startAddress;
+                return startAddress;
             }
         }
 
@@ -37,9 +35,9 @@ namespace FoenixIDE.MemoryLocations
 
         public MemoryRAM(int StartAddress, int Length)
         {
-            this.startAddress = StartAddress;
-            this.length = Length;
-            this.endAddress = StartAddress + Length - 1;
+            startAddress = StartAddress;
+            length = Length;
+            endAddress = StartAddress + Length - 1;
             data = new byte[Length];
         }
 
@@ -84,14 +82,14 @@ namespace FoenixIDE.MemoryLocations
         internal int ReadLong(int Address)
         {
             //return ReadByte(Address) + (ReadByte(Address + 1) << 8) + (ReadByte(Address + 2) << 16);
-            return (int)BitConverter.ToInt32(data, Address) & 0xFF_FFFF;
+            return BitConverter.ToInt32(data, Address) & 0xFF_FFFF;
         }
 
         internal void Load(byte[] SourceData, int SrcStart, int DestStart, int copyLength)
         {
             for (int i = 0; i < copyLength; i++)
             {
-                this.data[DestStart + i] = SourceData[SrcStart + i];
+                data[DestStart + i] = SourceData[SrcStart + i];
             }
         }
 
@@ -109,18 +107,18 @@ namespace FoenixIDE.MemoryLocations
         // Duplicate a memory block
         internal void Duplicate(int SourceAddress, int DestAddress, int Length)
         {
-            System.Array.Copy(data, SourceAddress, data, DestAddress, Length);
+            Array.Copy(data, SourceAddress, data, DestAddress, Length);
         }
 
         public void CopyIntoBuffer(int srcAddress, int srcLength, byte[] buffer)
         {
-            System.Array.Copy(data, srcAddress, buffer, 0, srcLength);
+            Array.Copy(data, srcAddress, buffer, 0, srcLength);
         }
 
         // Copy data from a buffer to RAM
         public void CopyBuffer(byte[] src, int srcAddress, int destAddress, int length)
         {
-            System.Array.Copy(src, srcAddress, data, destAddress, length);
+            Array.Copy(src, srcAddress, data, destAddress, length);
         }
     }
 }

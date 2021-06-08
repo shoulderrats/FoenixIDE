@@ -2,13 +2,8 @@
 using FoenixIDE.GameGenerator;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.UI
@@ -27,12 +22,12 @@ namespace FoenixIDE.UI
     public partial class GameGeneratorForm : Form
     {
         Dictionary<string, List<string>> templates;
+        readonly AutocompleteMenu popupMenu;
+        readonly string[] keywords = { "ASSET", "COPY", "GOTO", "FILL", "VGM_INIT", "VGM_PLAY", "ENABLE_IRQS" };
 
-        AutocompleteMenu popupMenu;
-        string[] keywords = {"ASSET", "COPY", "GOTO", "FILL", "VGM_INIT", "VGM_PLAY", "ENABLE_IRQS" }; 
         //string[] methods = { "Equals()", "GetHashCode()", "GetType()", "ToString()" };
-        string[] snippets = { "if(^)\n{\n;\n}", "if(^)\n{\n;\n}\nelse\n{\n;\n}", "for(^;;)\n{\n;\n}", "while(^)\n{\n;\n}", "do${\n^;\n}while();", "switch(^)\n{\ncase : break;\n}" };
-        string[] declarationSnippets = {
+        readonly string[] snippets = { "if(^)\n{\n;\n}", "if(^)\n{\n;\n}\nelse\n{\n;\n}", "for(^;;)\n{\n;\n}", "while(^)\n{\n;\n}", "do${\n^;\n}while();", "switch(^)\n{\ncase : break;\n}" };
+        readonly string[] declarationSnippets = {
                "public class ^\n{\n}", "private class ^\n{\n}", "internal class ^\n{\n}",
                "public struct ^\n{\n;\n}", "private struct ^\n{\n;\n}", "internal struct ^\n{\n;\n}",
                "public void ^()\n{\n;\n}", "private void ^()\n{\n;\n}", "internal void ^()\n{\n;\n}", "protected void ^()\n{\n;\n}",
@@ -44,17 +39,19 @@ namespace FoenixIDE.UI
             InitializeComponent();
 
             //create autocomplete popup menu
-            popupMenu = new AutocompleteMenu(CodeTextBox);
-            //popupMenu.Items.ImageList = imageList1;
-            popupMenu.SearchPattern = @"[\w\.:=!]";
-            popupMenu.AllowTabKey = true;
+            popupMenu = new AutocompleteMenu(CodeTextBox)
+            {
+                //popupMenu.Items.ImageList = imageList1;
+                SearchPattern = @"[\w\.:=!]",
+                AllowTabKey = true
+            };
             //
             BuildAutocompleteMenu();
         }
 
         private void BuildAutocompleteMenu()
         {
-            List<AutocompleteItem> items = new List<AutocompleteItem>();
+            List<AutocompleteItem> items = new();
 
             foreach (var item in snippets)
                 items.Add(new SnippetAutocompleteItem(item) { ImageIndex = 1 });
@@ -98,7 +95,7 @@ namespace FoenixIDE.UI
         /// </summary>
         class InsertSpaceSnippet : AutocompleteItem
         {
-            string pattern;
+            readonly string pattern;
 
             public InsertSpaceSnippet(string pattern) : base("")
             {
@@ -172,8 +169,8 @@ namespace FoenixIDE.UI
             public override string GetTextForReplace()
             {
                 //extend range
-                Range r = Parent.Fragment;
-                Place end = r.End;
+                FastColoredTextBoxNS.Range r = Parent.Fragment;
+                //Place end = r.End;
                 r.Start = enterPlace;
                 r.End = r.End;
                 //insert line break
@@ -198,7 +195,7 @@ namespace FoenixIDE.UI
 
         private void LoadButton_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDlg = new OpenFileDialog()
+            OpenFileDialog openDlg = new()
             {
                 Title = "Pick a Foenix Game File to Open",
                 Filter = "FGM (*.fgm)|*.fgm"
@@ -208,7 +205,7 @@ namespace FoenixIDE.UI
                 CodeTextBox.Text = File.ReadAllText(openDlg.FileName);
 
                 // Check which checkboxes to check
-                FoenixLexer fl = new FoenixLexer(CodeTextBox.Text);
+                FoenixLexer fl = new(CodeTextBox.Text);
                 cbSOF.Checked = fl.GetSub("SOF_IRQ_HANDLER") != null;
                 cbSOL.Checked = fl.GetSub("SOL_IRQ_HANDLER") != null;
                 cbTimer0.Checked = fl.GetSub("TIMER0_IRQ_HANDLER") != null;
@@ -224,7 +221,7 @@ namespace FoenixIDE.UI
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveDlg = new SaveFileDialog
+            SaveFileDialog saveDlg = new()
             {
                 Title = "Pick a Foenix Game File to Save",
                 Filter = "FGM (*.fgm)|*.fgm"
@@ -243,9 +240,9 @@ namespace FoenixIDE.UI
         private void GenerateASMButton_Click(object sender, EventArgs e)
         {
             // parse the code and generate .asm file(s)
-            FoenixLexer fl = new FoenixLexer(CodeTextBox.Text);
+            FoenixLexer fl = new(CodeTextBox.Text);
             GG_Validate(fl);
-            FolderBrowserDialog saveDlg = new FolderBrowserDialog()
+            FolderBrowserDialog saveDlg = new()
             {
                 Description = "Select Destination Folder",
                 ShowNewFolderButton = true,
@@ -259,7 +256,7 @@ namespace FoenixIDE.UI
                 // copy the standard asm files - includes and definitions
                 string folder = saveDlg.SelectedPath;
                 Directory.CreateDirectory(folder + Path.DirectorySeparatorChar + "includes");
-                DirectoryInfo dir = new DirectoryInfo(@"Resources\\base_asm");
+                DirectoryInfo dir = new(@"Resources\\base_asm");
                 foreach (FileInfo fi in dir.GetFiles("*.asm"))
                 {
                     fi.CopyTo(folder + Path.DirectorySeparatorChar + "includes" + Path.DirectorySeparatorChar + fi.Name, true);
@@ -267,7 +264,7 @@ namespace FoenixIDE.UI
                     // Read the assignments from the file
                     if (".asm".Equals(fi.Extension))
                     {
-                        string definition = File.ReadAllText(fi.FullName);
+                        //string definition = File.ReadAllText(fi.FullName);
                         // parser definition into VARs/ADDRs
                     }
                 }
@@ -277,7 +274,7 @@ namespace FoenixIDE.UI
                 }
 
                 // Generate the header for the main file
-                List<string> lines = new List<string>()
+                List<string> lines = new()
                 {
                     "; *************************************************************************",
                     "; * Assembly generated by Foenix IDE Game Generator",
@@ -351,9 +348,9 @@ namespace FoenixIDE.UI
             }
         }
 
-        private string BuildIrqReg0String(bool irqSOF, bool irqSOL, bool irqTMR0, bool irqTMR1, bool irqTMR2, bool irqRTC, bool irqFDC, bool irqMOUSE)
+        private static string BuildIrqReg0String(bool irqSOF, bool irqSOL, bool irqTMR0, bool irqTMR1, bool irqTMR2, bool irqRTC, bool irqFDC, bool irqMOUSE)
         {
-            List<string> irqs = new List<string>();
+            List<string> irqs = new();
             if (irqSOF)
             {
                 irqs.Add("FNX0_INT00_SOF");
@@ -389,9 +386,9 @@ namespace FoenixIDE.UI
         }
 
 
-        private string BuildIrqReg1String(bool irqKBD, bool irqSC0, bool irqSC1, bool irqCOM2, bool irqCOM1, bool irqMPU401, bool irqLPT, bool irqSDCARD)
+        private static string BuildIrqReg1String(bool irqKBD, bool irqSC0, bool irqSC1, bool irqCOM2, bool irqCOM1, bool irqMPU401, bool irqLPT, bool irqSDCARD)
         {
-            List<string> irqs = new List<string>();
+            List<string> irqs = new();
             if (irqKBD)
             {
                 irqs.Add("FNX1_INT00_KBD");
@@ -417,7 +414,7 @@ namespace FoenixIDE.UI
         private void WriteInterruptHandler(string filename, FoenixLexer fl, IrqType irq)
         {
             List<TokenMatch> sub = fl.GetSub(irq.ToString() + "_IRQ_HANDLER");
-            List<string> lines = new List<string>();
+            List<string> lines = new();
             if (sub != null)
             {
                 foreach (TokenMatch tm in sub)
@@ -444,10 +441,10 @@ namespace FoenixIDE.UI
         private void GameGeneratorForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true; // this cancels the close event.
-            this.Hide();
+            Hide();
         }
 
-        private List<string> GetTemplate(Asset asset)
+        private static List<string> GetTemplate(Asset asset)
         {
             return new List<string>()
             {
@@ -458,9 +455,8 @@ namespace FoenixIDE.UI
 
         private List<string> GetTemplate(TokenMatch tm)
         {
-            List<string> template;
-            templates.TryGetValue(tm.TokenType.ToString(), out template);
-            List<string> result = new List<string>();
+            templates.TryGetValue(tm.TokenType.ToString(), out List<string> template);
+            List<string> result = new();
             if (template != null)
             {
                 foreach (string line in template)
@@ -469,10 +465,10 @@ namespace FoenixIDE.UI
                     //string value = Regex.Replace(line, "(.*)\\{([0-9]*)\\}(.*)", m =>
                     string value = Regex.Replace(line, @"\{([0-9]+)\}", m =>
                     {
-                        if (m.Success && m.Groups.Count>0)
+                        if (m.Success && m.Groups.Count > 0)
                         {
                             int index = int.Parse(m.Groups[1].Value);
-                            if (tm.groups.Count > index-1 )
+                            if (tm.groups.Count > index - 1)
                             {
                                 return tm.groups[index - 1];
                             }
@@ -498,7 +494,7 @@ namespace FoenixIDE.UI
             templates = new Dictionary<string, List<string>>();
             string[] AllTemplates = File.ReadAllLines(@"Resources\\GameGeneratorTemplates.txt");
             string templateName = null; ;
-            List<string> lines = new List<string>();
+            List<string> lines = new();
             foreach (string line in AllTemplates)
             {
                 if (line.StartsWith("[") && line.EndsWith("]"))
@@ -508,7 +504,7 @@ namespace FoenixIDE.UI
                         templates.Add(templateName, lines);
                         lines = new List<string>();
                     }
-                    templateName = line.Substring(1, line.Length - 2);
+                    templateName = line[1..^1];
                 }
                 else
                 {
@@ -520,14 +516,14 @@ namespace FoenixIDE.UI
                 templates.Add(templateName, lines);
             }
         }
-        private void cbIRQ_CheckedChanged(object sender, EventArgs e)
+        private void CbIRQ_CheckedChanged(object sender, EventArgs e)
         {
             // if the IRQ subroutine doesn't exist, add it.
             CheckBox cb = (CheckBox)sender;
             if (cb.Checked)
             {
                 string irq = cb.Text.Replace("IRQ", "").Trim().ToUpper();
-                FoenixLexer fl = new FoenixLexer(CodeTextBox.Text);
+                FoenixLexer fl = new(CodeTextBox.Text);
                 if (fl.GetSub(irq + "_IRQ_HANDLER") == null)
                 {
                     CodeTextBox.Text += "\r\n" +
@@ -539,7 +535,7 @@ namespace FoenixIDE.UI
         }
 
         // Call the lexer and print the errors to the user
-        private void GG_Validate(FoenixLexer fl)
+        private static void GG_Validate(FoenixLexer fl)
         {
             // Get errors
             // Display errors

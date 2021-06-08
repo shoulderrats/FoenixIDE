@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FoenixIDE.Simulator.UI
@@ -62,7 +55,7 @@ namespace FoenixIDE.Simulator.UI
                 SDCardEnabled.Checked = false;
                 SDCardFolderText.Text = "";
             }
-            
+
         }
         public string GetPath()
         {
@@ -113,9 +106,9 @@ namespace FoenixIDE.Simulator.UI
 
         private void SDCardEnabled_CheckedChanged(object sender, EventArgs e)
         {
-            CapacityCombo.Enabled = Iso_selection.Checked ? false : SDCardEnabled.Checked;
-            FSTypeCombo.Enabled = Iso_selection.Checked ? false : SDCardEnabled.Checked;
-            ClusterCombo.Enabled = Iso_selection.Checked ? false : SDCardEnabled.Checked;
+            CapacityCombo.Enabled = !Iso_selection.Checked && SDCardEnabled.Checked;
+            FSTypeCombo.Enabled = !Iso_selection.Checked && SDCardEnabled.Checked;
+            ClusterCombo.Enabled = !Iso_selection.Checked && SDCardEnabled.Checked;
             if (!SDCardEnabled.Checked)
             {
                 SDCardFolderText.Text = "";
@@ -127,7 +120,7 @@ namespace FoenixIDE.Simulator.UI
 
         public bool GetISOMode()
         {
-            return Iso_selection.Checked ? true : false;
+            return Iso_selection.Checked;
         }
 
         private void Iso_selection_CheckedChanged(object sender, EventArgs e)

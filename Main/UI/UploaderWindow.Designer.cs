@@ -17,6 +17,7 @@
             {
                 components.Dispose();
             }
+            serial?.Dispose();
             base.Dispose(disposing);
         }
 
@@ -426,7 +427,7 @@
             // hideLabelTimer
             // 
             this.hideLabelTimer.Interval = 5000;
-            this.hideLabelTimer.Tick += new System.EventHandler(this.hideLabelTimer_Tick);
+            this.hideLabelTimer.Tick += new System.EventHandler(this.HideLabelTimer_Tick);
             // 
             // UploaderWindow
             // 

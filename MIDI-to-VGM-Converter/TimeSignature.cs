@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MIDI_to_VGM_Converter
 {
@@ -15,7 +11,7 @@ namespace MIDI_to_VGM_Converter
 
         public override String ToString()
         {
-            return (string)(numerator + "/" + (Math.Pow(2, denominator)));
+            return numerator + "/" + (Math.Pow(2, denominator));
         }
     }
 }

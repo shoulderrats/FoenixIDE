@@ -1,6 +1,4 @@
-﻿using FoenixIDE.CharEditor;
-
-namespace FoenixIDE.CharEditor
+﻿namespace FoenixIDE.CharEditor
 {
     partial class CharEditorWindow
     {

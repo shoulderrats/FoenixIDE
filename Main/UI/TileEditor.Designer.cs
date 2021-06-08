@@ -48,8 +48,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.SaveTilesetButton = new System.Windows.Forms.Button();
             this.ClearTilemapButton = new System.Windows.Forms.Button();
-            this.Height = new System.Windows.Forms.TextBox();
-            this.Width = new System.Windows.Forms.TextBox();
+            this.TileHeight = new System.Windows.Forms.TextBox();
+            this.TileWidth = new System.Windows.Forms.TextBox();
             this.YLabel = new System.Windows.Forms.Label();
             this.XLabel = new System.Windows.Forms.Label();
             this.TilemapAddress = new System.Windows.Forms.TextBox();
@@ -170,8 +170,8 @@
             this.TilemapGroup.Controls.Add(this.label3);
             this.TilemapGroup.Controls.Add(this.SaveTilesetButton);
             this.TilemapGroup.Controls.Add(this.ClearTilemapButton);
-            this.TilemapGroup.Controls.Add(this.Height);
-            this.TilemapGroup.Controls.Add(this.Width);
+            this.TilemapGroup.Controls.Add(this.TileHeight);
+            this.TilemapGroup.Controls.Add(this.TileWidth);
             this.TilemapGroup.Controls.Add(this.YLabel);
             this.TilemapGroup.Controls.Add(this.XLabel);
             this.TilemapGroup.Controls.Add(this.TilemapAddress);
@@ -246,23 +246,23 @@
             // 
             // Height
             // 
-            this.Height.Location = new System.Drawing.Point(223, 46);
-            this.Height.MaxLength = 4;
-            this.Height.Name = "Height";
-            this.Height.Size = new System.Drawing.Size(38, 20);
-            this.Height.TabIndex = 6;
-            this.Height.Text = "1023";
-            this.Height.TextChanged += new System.EventHandler(this.Height_TextChanged);
+            this.TileHeight.Location = new System.Drawing.Point(223, 46);
+            this.TileHeight.MaxLength = 4;
+            this.TileHeight.Name = "Height";
+            this.TileHeight.Size = new System.Drawing.Size(38, 20);
+            this.TileHeight.TabIndex = 6;
+            this.TileHeight.Text = "1023";
+            this.TileHeight.TextChanged += new System.EventHandler(this.Height_TextChanged);
             // 
             // Width
             // 
-            this.Width.Location = new System.Drawing.Point(84, 46);
-            this.Width.MaxLength = 4;
-            this.Width.Name = "Width";
-            this.Width.Size = new System.Drawing.Size(38, 20);
-            this.Width.TabIndex = 4;
-            this.Width.Text = "1023";
-            this.Width.TextChanged += new System.EventHandler(this.Width_TextChanged);
+            this.TileWidth.Location = new System.Drawing.Point(84, 46);
+            this.TileWidth.MaxLength = 4;
+            this.TileWidth.Name = "Width";
+            this.TileWidth.Size = new System.Drawing.Size(38, 20);
+            this.TileWidth.TabIndex = 4;
+            this.TileWidth.Text = "1023";
+            this.TileWidth.TextChanged += new System.EventHandler(this.Width_TextChanged);
             // 
             // YLabel
             // 
@@ -435,8 +435,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button SaveTilesetButton;
         private System.Windows.Forms.Button ClearTilemapButton;
-        private System.Windows.Forms.TextBox Height;
-        private System.Windows.Forms.TextBox Width;
+        private System.Windows.Forms.TextBox TileHeight;
+        private System.Windows.Forms.TextBox TileWidth;
         private System.Windows.Forms.Label YLabel;
         private System.Windows.Forms.Label XLabel;
         private System.Windows.Forms.TextBox TilemapAddress;

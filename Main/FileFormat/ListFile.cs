@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Simulator.FileFormat
 {
@@ -12,7 +9,7 @@ namespace FoenixIDE.Simulator.FileFormat
     /// </summary>
     public class ListFile
     {
-        private SortedList<int, DebugLine> DbgLines = new SortedList<int, DebugLine>();
+        private readonly SortedList<int, DebugLine> DbgLines = new();
 
         internal SortedList<int, DebugLine> Lines
         {
@@ -37,7 +34,7 @@ namespace FoenixIDE.Simulator.FileFormat
                         string[] tokens = line.Split(new char[] { '\t' });
                         if (tokens.Length > 2)
                         {
-                            pc = Convert.ToInt32(tokens[0].Replace(".",""), 16);
+                            pc = Convert.ToInt32(tokens[0].Replace(".", ""), 16);
                             if (CommandOffset > 1 && tokens[1] != "")
                             {
                                 pc = Convert.ToInt32(tokens[1], 16);
@@ -54,22 +51,22 @@ namespace FoenixIDE.Simulator.FileFormat
                             string[] strOpcodes = tokens[CommandOffset].Split(new char[] { ' ' });
                             if (strOpcodes[0].Length == 0)
                             {
-                                match.SetLabel(tokens[tokens.Length - 1].Trim());
+                                match.SetLabel(tokens[^1].Trim());
                             }
                             else
                             {
                                 byte[] opcodes = Array.ConvertAll(strOpcodes, value => Convert.ToByte(value, 16));
                                 match.SetOpcodes(opcodes);
-                                match.SetMnemonic(tokens[tokens.Length - 1]);
+                                match.SetMnemonic(tokens[^1]);
                             }
-                            
+
                         }
-                    } 
+                    }
                     else if (line.StartsWith(";Offset"))
                     {
                         // sometimes, there's an addition field added, which makes the command offset 2, instead of 1
                         string[] tokens = line.Split(new char[] { '\t' });
-                        for (int i = 0; i < tokens.Length; i++) 
+                        for (int i = 0; i < tokens.Length; i++)
                         {
                             if (tokens[i].Equals(";Hex"))
                             {

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Windows.Forms;
-using FoenixIDE.Display;
+﻿using System.Windows.Forms;
 
 namespace FoenixIDE
 {
-    public class TerminalKeyEventArgs : global::System.Windows.Forms.KeyPressEventArgs
+    public class TerminalKeyEventArgs : KeyPressEventArgs
     {
         public Keys Modifiers;
         public TerminalKeyEventArgs(char KeyChar, Keys Modifiers = Keys.None) : base(KeyChar)

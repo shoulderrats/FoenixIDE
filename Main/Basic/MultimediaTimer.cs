@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace FoenixIDE.Timers
 {
@@ -95,7 +91,7 @@ namespace FoenixIDE.Timers
         [DllImport("Winmm.dll", CharSet = CharSet.Auto)]
         private static extern uint timeEndPeriod(uint uPeriod);
 
-		// Use this to pin the timerCallback functions to avoid improper garbage collection
+        // Use this to pin the timerCallback functions to avoid improper garbage collection
         private GCHandle _gcHandle;
 
 
@@ -103,7 +99,7 @@ namespace FoenixIDE.Timers
         ///Timer type definitions
         /// </summary>
         [Flags]
-        public enum fuEvent : uint
+        public enum FuEvent : uint
         {
             /// <summary>
             /// OneHzSignalEvent occurs once, after uDelay milliseconds. 
@@ -134,7 +130,7 @@ namespace FoenixIDE.Timers
         /// <summary>
         /// The callback used by the the API
         /// </summary>
-        private TimerCallback timerCallback;
+        private readonly TimerCallback timerCallback;
 
 
         /// <summary>
@@ -148,7 +144,7 @@ namespace FoenixIDE.Timers
             Enabled = false;
             //Initialize the API callback
             timerCallback = CallbackFunction;
-			// pin the timerCallback to a fixed memory address, such that the c# GC won't mess with it.
+            // pin the timerCallback to a fixed memory address, such that the c# GC won't mess with it.
             _gcHandle = GCHandle.Alloc(timerCallback);
         }
 
@@ -211,7 +207,7 @@ namespace FoenixIDE.Timers
         /// <value><c>true</c> if enabled; otherwise, <c>false</c>.</value>
         public bool Enabled { get; private set; }
 
-        private object syncLock = new object();
+        private readonly object syncLock = new();
 
         /// <summary>
         /// Gets or sets the interval at which to raise the    
@@ -265,8 +261,8 @@ namespace FoenixIDE.Timers
                 Enabled = false;
 
                 //Set the timer type flags
-                fuEvent f = fuEvent.TIME_CALLBACK_FUNCTION | (AutoReset ?
-                                 fuEvent.TIME_PERIODIC : fuEvent.TIME_ONESHOT);
+                FuEvent f = FuEvent.TIME_CALLBACK_FUNCTION | (AutoReset ?
+                                 FuEvent.TIME_PERIODIC : FuEvent.TIME_ONESHOT);
 
                 id = timeSetEvent(Interval, 0, timerCallback, UIntPtr.Zero,
                                                                       (uint)f);

@@ -1,25 +1,18 @@
 ﻿using FoenixIDE.Basic;
+using FoenixIDE.CharEditor;
+using FoenixIDE.Display;
 using FoenixIDE.MemoryLocations;
 using FoenixIDE.Simulator.Devices;
 using FoenixIDE.Simulator.Devices.SDCard;
 using FoenixIDE.Simulator.FileFormat;
 using FoenixIDE.Simulator.UI;
-using FoenixIDE.CharEditor;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using FoenixIDE.Timers;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
-using System.Net;
-using FoenixIDE.Display;
-using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace FoenixIDE.UI
 {
@@ -28,29 +21,29 @@ namespace FoenixIDE.UI
         public FoenixSystem kernel;
 
         //  Windows
-        public UI.CPUWindow debugWindow;
+        public CPUWindow debugWindow;
         public MemoryWindow memoryWindow;
         public UploaderWindow uploaderWindow;
-        private WatchForm watchWindow = new WatchForm();
-        private AssetWindow assetWindow = new AssetWindow();
-        private SDCardWindow sdCardWindow = new SDCardWindow();
+        private readonly WatchForm watchWindow = new();
+        private readonly AssetWindow assetWindow = new();
+        private readonly SDCardWindow sdCardWindow = new();
         private TileEditor tileEditor;
         private CharEditorWindow charEditor;
         public SerialTerminal terminal;
-        private JoystickForm joystickWindow = new JoystickForm();
-        private GameGeneratorForm GGF = new GameGeneratorForm();
+        private readonly JoystickForm joystickWindow = new();
+        private readonly GameGeneratorForm GGF = new();
 
         // Local variables and events
         private byte previousGraphicMode;
         private delegate void TileClickEvent(Point tile);
         private TileClickEvent TileClicked;
-        private ResourceChecker ResChecker = new ResourceChecker();
+        private readonly ResourceChecker ResChecker = new();
         private delegate void TransmitByteFunction(byte Value);
         private delegate void ShowFormFunction();
-        private String defaultKernel = @"roms\kernel.hex";
-        private int jumpStartAddress;
-        private bool disabledIRQs = false;
-        private bool autoRun = true;
+        private readonly string defaultKernel = @"roms\kernel.hex";
+        //private readonly int jumpStartAddress;
+        private readonly bool disabledIRQs = false;
+        private readonly bool autoRun = true;
         private BoardVersion version = BoardVersion.RevC;
         public static MainWindow Instance = null;
         private delegate void WriteCPSFPSFunction(string CPS, string FPS);
@@ -60,10 +53,11 @@ namespace FoenixIDE.UI
         {
             if (context != null)
             {
-                if (context.ContainsKey("jumpStartAddress"))
-                {
-                    jumpStartAddress = int.Parse(context["jumpStartAddress"]);
-                }
+                //JumpStartAddress is not used.
+                //if (context.ContainsKey("jumpStartAddress"))
+                //{
+                //    jumpStartAddress = int.Parse(context["jumpStartAddress"]);
+                //}
                 if (context.ContainsKey("defaultKernel"))
                 {
                     defaultKernel = context["defaultKernel"];
@@ -143,14 +137,14 @@ namespace FoenixIDE.UI
                 debugWindow.DisableIRQs(true);
             }
 
-            this.Top = 0;
-            this.Left = 0;
+            Top = 0;
+            Left = 0;
             //this.Width = debugWindow.Left;
-            if (this.Width > 1200)
+            if (Width > 1200)
             {
-                this.Width = 1200;
+                Width = 1200;
             }
-            this.Height = Convert.ToInt32(this.Width * 0.75);
+            Height = Convert.ToInt32(Width * 0.75);
 
             SetDipSwitchMemory();
             // Code is tightly coupled with memory manager
@@ -158,7 +152,7 @@ namespace FoenixIDE.UI
             kernel.MemMgr.UART2.TransmitByte += SerialTransmitByte;
             kernel.MemMgr.SDCARD.sdCardIRQMethod += SDCardInterrupt;
             kernel.ResCheckerRef = ResChecker;
-            
+
             watchWindow.SetKernel(kernel);
             assetWindow.SetKernel(kernel);
 
@@ -175,8 +169,8 @@ namespace FoenixIDE.UI
 
         private void CenterForm(Form form)
         {
-            int left = this.Left + (this.Width - form.Width) / 2;
-            int top = this.Top + (this.Height - form.Height) / 2;
+            int left = Left + (Width - form.Width) / 2;
+            int top = Top + (Height - form.Height) / 2;
             form.Location = new Point(left, top);
         }
 
@@ -203,14 +197,14 @@ namespace FoenixIDE.UI
             if (debugWindow == null || debugWindow.IsDisposed)
             {
                 kernel.CPU.DebugPause = true;
-                debugWindow = new UI.CPUWindow
+                debugWindow = new CPUWindow
                 {
                     Top = Screen.PrimaryScreen.WorkingArea.Top,
                 };
                 debugWindow.Left = Screen.PrimaryScreen.WorkingArea.Width - debugWindow.Width;
                 debugWindow.SetKernel(kernel);
                 debugWindow.Show();
-            } 
+            }
             else
             {
                 debugWindow.SetKernel(kernel);
@@ -256,8 +250,8 @@ namespace FoenixIDE.UI
             if (uploaderWindow == null || uploaderWindow.IsDisposed)
             {
                 uploaderWindow = new UploaderWindow();
-                int left = this.Left + (this.Width - uploaderWindow.Width) / 2;
-                int top =  this.Top + (this.Height - uploaderWindow.Height) / 2;
+                int left = Left + (Width - uploaderWindow.Width) / 2;
+                int top = Top + (Height - uploaderWindow.Height) / 2;
                 uploaderWindow.Location = new Point(left, top);
                 uploaderWindow.kernel = kernel;
                 uploaderWindow.SetBoardVersion(version);
@@ -288,7 +282,7 @@ namespace FoenixIDE.UI
          */
         public void LoadImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AssetLoader loader = new AssetLoader
+            AssetLoader loader = new()
             {
                 StartPosition = FormStartPosition.CenterParent,
                 MemMgrRef = kernel.CPU.MemMgr,
@@ -305,20 +299,20 @@ namespace FoenixIDE.UI
             }
         }
 
-        DateTime pSof;
+        //DateTime pSof;
         public void SOF()
         {
             // Check if the interrupt is enabled
-            DateTime currentDT = DateTime.Now;
-            TimeSpan ts = currentDT - pSof;
+            //DateTime currentDT = DateTime.Now;
+            //TimeSpan ts = currentDT - pSof;
             //System.Console.WriteLine(ts.TotalMilliseconds);
-            pSof = currentDT;
-            byte mask = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
+            //pSof = currentDT;
+            byte mask = kernel.MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
             if (!kernel.CPU.DebugPause && !kernel.CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT00_SOF) == (byte)Register0.FNX0_INT00_SOF))
             //if (!kernel.CPU.DebugPause && ((~mask & (byte)Register0.FNX0_INT00_SOF) == (byte)Register0.FNX0_INT00_SOF))
             {
                 // Set the SOF Interrupt
-                byte IRQ0 = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG0);
+                byte IRQ0 = kernel.MemMgr.ReadByte(MemoryMap.INT_PENDING_REG0);
                 IRQ0 |= (byte)Register0.FNX0_INT00_SOF;
                 kernel.MemMgr.INTERRUPT.WriteFromGabe(0, IRQ0);
                 kernel.CPU.Pins.IRQ = true;
@@ -328,12 +322,12 @@ namespace FoenixIDE.UI
         public void SOL()
         {
             // Check if the interrupt is enabled
-            byte mask = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
-           // if (!kernel.CPU.DebugPause && !kernel.CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT01_SOL) == (byte)Register0.FNX0_INT01_SOL))
+            byte mask = kernel.MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
+            // if (!kernel.CPU.DebugPause && !kernel.CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT01_SOL) == (byte)Register0.FNX0_INT01_SOL))
             if (!kernel.CPU.DebugPause && ((~mask & (byte)Register0.FNX0_INT01_SOL) == (byte)Register0.FNX0_INT01_SOL))
             {
                 // Set the SOL Interrupt
-                byte IRQ0 = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG0);
+                byte IRQ0 = kernel.MemMgr.ReadByte(MemoryMap.INT_PENDING_REG0);
                 IRQ0 |= (byte)Register0.FNX0_INT01_SOL;
                 kernel.MemMgr.INTERRUPT.WriteFromGabe(0, IRQ0);
                 kernel.CPU.Pins.IRQ = true;
@@ -343,11 +337,11 @@ namespace FoenixIDE.UI
         public void SDCardInterrupt(CH376SInterrupt irq)
         {
             // Check if the SD Card interrupt is allowed
-            byte mask = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG1);
+            byte mask = kernel.MemMgr.ReadByte(MemoryMap.INT_MASK_REG1);
             if (!kernel.CPU.DebugPause && (~mask & (byte)Register1.FNX1_INT07_SDCARD) == (byte)Register1.FNX1_INT07_SDCARD)
             {
                 // Set the SD Card Interrupt
-                byte IRQ1 = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG1);
+                byte IRQ1 = kernel.MemMgr.ReadByte(MemoryMap.INT_PENDING_REG1);
                 IRQ1 |= (byte)Register1.FNX1_INT07_SDCARD;
                 kernel.MemMgr.INTERRUPT.WriteFromGabe(1, IRQ1);
                 kernel.CPU.Pins.IRQ = true;
@@ -359,37 +353,37 @@ namespace FoenixIDE.UI
 
         private void FullScreenToggle()
         {
-            if (this.fullScreen == false)
+            if (fullScreen == false)
             {
-                this.fullScreen = true;
+                fullScreen = true;
 
-                this.menuStrip1.Visible = false;
-                this.statusStrip1.Visible = false;
-                this.debugWindow.Visible = false;               // not sure that is needed
-                this.memoryWindow.Visible = false;              // maybe maximizing GPU Window is enough?
+                menuStrip1.Visible = false;
+                statusStrip1.Visible = false;
+                debugWindow.Visible = false;               // not sure that is needed
+                memoryWindow.Visible = false;              // maybe maximizing GPU Window is enough?
 
-                this.WindowState = FormWindowState.Normal;
-                this.FormBorderStyle = FormBorderStyle.None;
-                this.WindowState = FormWindowState.Maximized;
+                WindowState = FormWindowState.Normal;
+                FormBorderStyle = FormBorderStyle.None;
+                WindowState = FormWindowState.Maximized;
             }
             else
             {
-                this.fullScreen = false;
+                fullScreen = false;
 
-                this.FormBorderStyle = FormBorderStyle.Sizable;
-                this.WindowState = FormWindowState.Normal;
+                FormBorderStyle = FormBorderStyle.Sizable;
+                WindowState = FormWindowState.Normal;
 
-                this.menuStrip1.Visible = true;
-                this.statusStrip1.Visible = true;
-                this.debugWindow.Visible = true;
-                this.debugWindow.Show();
-                this.debugWindow.Refresh();
-                this.memoryWindow.Visible = true;
-                this.memoryWindow.Show();
-                this.memoryWindow.Refresh();
+                menuStrip1.Visible = true;
+                statusStrip1.Visible = true;
+                debugWindow.Visible = true;
+                debugWindow.Show();
+                debugWindow.Refresh();
+                memoryWindow.Visible = true;
+                memoryWindow.Show();
+                memoryWindow.Refresh();
 
-                this.Focus();
-                this.Refresh();
+                Focus();
+                Refresh();
             }
         }
 
@@ -397,7 +391,7 @@ namespace FoenixIDE.UI
         {
 
             // we take over Shift+F11 and Shift+F5
-            if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift)
+            if ((ModifierKeys & Keys.Shift) == Keys.Shift)
             {
                 switch (e.KeyCode)
                 {
@@ -405,7 +399,7 @@ namespace FoenixIDE.UI
                         FullScreenToggle();
                         break;
                     case Keys.F5:
-                        this.debugWindow.RunButton_Click(sender, null);
+                        debugWindow.RunButton_Click(sender, null);
                         break;
                 }
             }
@@ -460,7 +454,7 @@ namespace FoenixIDE.UI
             {
                 GGF.Close();
             }
-            this.Close();
+            Close();
         }
 
         private void Write_CPS_FPS_Safe(string CPS, string FPS)
@@ -468,7 +462,7 @@ namespace FoenixIDE.UI
             if (statusStrip1.InvokeRequired)
             {
                 var d = new WriteCPSFPSFunction(Write_CPS_FPS_Safe);
-                statusStrip1.Invoke(d, new object[] { CPS, FPS});
+                statusStrip1.Invoke(d, new object[] { CPS, FPS });
 
             }
             else
@@ -483,13 +477,13 @@ namespace FoenixIDE.UI
         DateTime previousTime = DateTime.Now;
         private void Gpu_Update_Cps_Fps()
         {
-            if (kernel != null  && kernel.CPU != null)
+            if (kernel != null && kernel.CPU != null)
             {
                 DateTime currentTime = DateTime.Now;
 
                 if (!kernel.CPU.DebugPause)
                 {
-                    
+
                     TimeSpan s = currentTime - previousTime;
                     int currentCounter = kernel.CPU.CycleCounter;
                     int currentFrame = gpu.paintCycle;
@@ -502,14 +496,14 @@ namespace FoenixIDE.UI
                     Write_CPS_FPS_Safe("CPS: " + cps.ToString("N0"), "FPS: " + fps.ToString("N0"));
                 }
                 // write the time to memory - values are BCD
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_SEC - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Second));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MIN - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Minute));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_HRS - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Hour));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DAY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Day));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_MONTH - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Month));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_YEAR - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year % 100));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_CENTURY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year / 100));
-                kernel.MemMgr.VICKY.WriteByte(MemoryLocations.MemoryMap.RTC_DOW - kernel.MemMgr.VICKY.StartAddress, (byte)(currentTime.DayOfWeek + 1));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_SEC - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Second));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_MIN - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Minute));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_HRS - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Hour));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_DAY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Day));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_MONTH - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Month));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_YEAR - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year % 100));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_CENTURY - kernel.MemMgr.VICKY.StartAddress, BCD(currentTime.Year / 100));
+                kernel.MemMgr.VICKY.WriteByte(MemoryMap.RTC_DOW - kernel.MemMgr.VICKY.StartAddress, (byte)(currentTime.DayOfWeek + 1));
             }
             else
             {
@@ -518,7 +512,7 @@ namespace FoenixIDE.UI
             }
         }
 
-        private byte BCD(int val)
+        private static byte BCD(int val)
         {
             return (byte)(val / 10 * 0x10 + val % 10);
         }
@@ -542,7 +536,7 @@ namespace FoenixIDE.UI
          * Restart the CPU
          */
         public void RestartMenuItemClick(object sender, EventArgs e)
-        {           
+        {
             previousCounter = 0;
             debugWindow.Pause();
             if (kernel.ResetCPU(null))
@@ -558,7 +552,7 @@ namespace FoenixIDE.UI
                 debugWindow.RunButton_Click(null, null);
             }
         }
-        
+
         /** 
          * Reset the system and go to step mode.
          */
@@ -587,7 +581,7 @@ namespace FoenixIDE.UI
                 kernel.CPU.DebugPause = true;
                 if (kernel.CPU.CPUThread != null)
                 {
-                    kernel.CPU.CPUThread.Abort();
+                    kernel.CPU.CPUThread.Abort(); //Should use a 'cooperative' cancellation token instead of deprecated Abort().
                     kernel.CPU.CPUThread.Join(1000);
                 }
             }
@@ -595,7 +589,7 @@ namespace FoenixIDE.UI
 
         private void MenuOpenHexFile_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Filter = "Hex Files|*.hex",
                 Title = "Select a Hex File",
@@ -612,7 +606,7 @@ namespace FoenixIDE.UI
          */
         private void LoadFNXMLFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Title = "Load Project File",
                 Filter = "Foenix Project File|*.fnxml",
@@ -641,7 +635,7 @@ namespace FoenixIDE.UI
         private void SaveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Pick the file to create
-            SaveFileDialog dialog = new SaveFileDialog
+            SaveFileDialog dialog = new()
             {
                 Title = "Save Project File",
                 CheckPathExists = true,
@@ -650,7 +644,7 @@ namespace FoenixIDE.UI
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                FoeniXmlFile fnxml = new FoeniXmlFile(kernel, ResChecker);
+                FoeniXmlFile fnxml = new(kernel, ResChecker);
                 fnxml.Write(dialog.FileName, true);
             }
         }
@@ -658,7 +652,7 @@ namespace FoenixIDE.UI
         private void SaveWatchListToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Pick the file to create
-            SaveFileDialog dialog = new SaveFileDialog
+            SaveFileDialog dialog = new()
             {
                 Title = "Save Watch List File",
                 CheckPathExists = true,
@@ -667,14 +661,14 @@ namespace FoenixIDE.UI
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                FoeniXmlFile xmlFile = new FoeniXmlFile(kernel, null);
+                FoeniXmlFile xmlFile = new(kernel, null);
                 xmlFile.WriteWatches(dialog.FileName);
             }
         }
 
         private void LoadWatchListToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Title = "Load Watch List File",
                 Filter = "Foenix Watch List File|*.wlxml",
@@ -682,7 +676,7 @@ namespace FoenixIDE.UI
             };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                FoeniXmlFile xmlFile = new FoeniXmlFile(kernel, null);
+                FoeniXmlFile xmlFile = new(kernel, null);
                 xmlFile.ReadWatches(dialog.FileName);
                 watchWindow.SetKernel(kernel);
                 if (!watchWindow.Visible)
@@ -694,7 +688,7 @@ namespace FoenixIDE.UI
 
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AboutForm about = new AboutForm();
+            AboutForm about = new();
             about.ShowDialog();
         }
 
@@ -708,7 +702,7 @@ namespace FoenixIDE.UI
             tileEditor = null;
             TileClicked = null;
         }
-        
+
         private void TileEditorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (tileEditor == null)
@@ -727,7 +721,7 @@ namespace FoenixIDE.UI
                 tileEditor.FormClosed += new FormClosedEventHandler(EditorWindowClosed);
 
                 // coordinate between the tile editor window and the GPU canvas
-                this.TileClicked += new TileClickEvent(tileEditor.TileClicked_Click);
+                TileClicked += new TileClickEvent(tileEditor.TileClicked_Click);
             }
             else
             {
@@ -752,9 +746,9 @@ namespace FoenixIDE.UI
             double ratioH = gpu.Height / (double)size.Y;
             if (gpu.TileEditorMode)
             {
-                if ((e.X / ratioW > 32 && e.X / ratioW < size.X -32) && (e.Y / ratioH > 32 && e.Y / ratioH < size.Y -32))
+                if ((e.X / ratioW > 32 && e.X / ratioW < size.X - 32) && (e.Y / ratioH > 32 && e.Y / ratioH < size.Y - 32))
                 {
-                    this.Cursor = Cursors.Hand;
+                    Cursor = Cursors.Hand;
                     if (e.Button == MouseButtons.Left)
                     {
                         TileClicked?.Invoke(new Point((int)(e.X / ratioW / 16), (int)(e.Y / ratioH / 16)));
@@ -762,7 +756,7 @@ namespace FoenixIDE.UI
                 }
                 else
                 {
-                    this.Cursor = Cursors.No;
+                    Cursor = Cursors.No;
                 }
             }
             else if (kernel.MemMgr != null)
@@ -805,13 +799,13 @@ namespace FoenixIDE.UI
 
             kernel.MemMgr.VICKY.WriteWord(0x702, X);
             kernel.MemMgr.VICKY.WriteWord(0x704, Y);
-            
+
             // Generate three interrupts - to emulate how the PS/2 controller works
-            byte mask = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
+            byte mask = kernel.MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
             // The PS/2 packet is byte0, xm, ym
             if ((~mask & (byte)Register0.FNX0_INT07_MOUSE) == (byte)Register0.FNX0_INT07_MOUSE)
             {
-                kernel.MemMgr.KEYBOARD.MousePackets((byte)(8+(middle?4:0)+ (right?2:0) + (left?1:0)) , (byte)(X & 0xFF), (byte)(Y & 0xFF));
+                kernel.MemMgr.KEYBOARD.MousePackets((byte)(8 + (middle ? 4 : 0) + (right ? 2 : 0) + (left ? 1 : 0)), (byte)(X & 0xFF), (byte)(Y & 0xFF));
             }
         }
 
@@ -821,10 +815,10 @@ namespace FoenixIDE.UI
             {
                 Cursor.Show();
             }
-            this.Cursor = Cursors.Default;
+            Cursor = Cursors.Default;
         }
 
-        
+
 
 
         private void Gpu_MouseEnter(object sender, EventArgs e)
@@ -874,10 +868,10 @@ namespace FoenixIDE.UI
                 kernel.MemMgr.SDCARD.isPresent = true;
                 kernel.MemMgr.SDCARD.SetISOMode(ISOMode);
                 sdCardStat = 1;
-               
+
                 kernel.MemMgr.SDCARD.SetCapacity(capacity);
                 kernel.MemMgr.SDCARD.SetClusterSize(clusterSize);
-                
+
                 if ("FAT12".Equals(fsType))
                 {
                     kernel.MemMgr.SDCARD.SetFSType(FSType.FAT12);
@@ -894,7 +888,7 @@ namespace FoenixIDE.UI
             }
             if (typeof(CH376SRegister) == kernel.MemMgr.SDCARD.GetType())
             {
-                kernel.MemMgr.WriteByte(MemoryLocations.MemoryMap.SDCARD_STAT, sdCardStat);
+                kernel.MemMgr.WriteByte(MemoryMap.SDCARD_STAT, sdCardStat);
             }
         }
 
@@ -939,7 +933,7 @@ namespace FoenixIDE.UI
             else if (version == BoardVersion.RevU)
             {
                 version = BoardVersion.RevUPlus;
-            }   
+            }
             else
             {
                 version = BoardVersion.RevB;
@@ -972,7 +966,7 @@ namespace FoenixIDE.UI
             DIP7 - GAMMA Correction ON/OFF
             DIP8- HDD INSTALLED
         */
-        private bool[] switches = new bool[8];
+        private readonly bool[] switches = new bool[8];
         private void DipSwitch_Paint(object sender, PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -1009,7 +1003,7 @@ namespace FoenixIDE.UI
             int textOffset = 24;
             int switchWidth = (label.Width - textOffset) / 8;
             int switchID = (e.X - 24) / switchWidth;
-           
+
             if (switchID < 8)
             {
                 // get current status and toggle it
@@ -1026,11 +1020,11 @@ namespace FoenixIDE.UI
             byte userMode = (byte)((switches[2] ? 0 : 1) + (switches[3] ? 0 : 2) + (switches[4] ? 0 : 4));
             if (kernel.MemMgr != null)
             {
-                kernel.MemMgr.WriteByte(MemoryLocations.MemoryMap.DIP_BOOT_MODE, bootMode);
-                kernel.MemMgr.WriteByte(MemoryLocations.MemoryMap.DIP_USER_MODE, userMode);
+                kernel.MemMgr.WriteByte(MemoryMap.DIP_BOOT_MODE, bootMode);
+                kernel.MemMgr.WriteByte(MemoryMap.DIP_USER_MODE, userMode);
 
                 // switch 5 - high-res mode
-                byte hiRes = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.VICKY_BASE_ADDR + 1);
+                byte hiRes = kernel.MemMgr.ReadByte(MemoryMap.VICKY_BASE_ADDR + 1);
                 if (switches[4])
                 {
                     hiRes |= 1;
@@ -1039,10 +1033,10 @@ namespace FoenixIDE.UI
                 {
                     hiRes &= 0xFE;
                 }
-                kernel.MemMgr.WriteByte(MemoryLocations.MemoryMap.VICKY_BASE_ADDR + 1, hiRes);
+                kernel.MemMgr.WriteByte(MemoryMap.VICKY_BASE_ADDR + 1, hiRes);
 
                 // switch 6 - Gamma
-                byte MCR = kernel.MemMgr.ReadByte(MemoryLocations.MemoryMap.VICKY_BASE_ADDR);
+                byte MCR = kernel.MemMgr.ReadByte(MemoryMap.VICKY_BASE_ADDR);
                 if (switches[6])
                 {
                     MCR |= 0x40;
@@ -1051,7 +1045,7 @@ namespace FoenixIDE.UI
                 {
                     MCR &= 0b1011_1111;
                 }
-                kernel.MemMgr.WriteByte(MemoryLocations.MemoryMap.VICKY_BASE_ADDR, MCR);
+                kernel.MemMgr.WriteByte(MemoryMap.VICKY_BASE_ADDR, MCR);
             }
         }
 
@@ -1078,7 +1072,7 @@ namespace FoenixIDE.UI
             string[] obj = (string[])e.Data.GetData("FileName");
             if (obj != null && obj.Length > 0)
             {
-                FileInfo info = new FileInfo(obj[0]);
+                FileInfo info = new(obj[0]);
                 if (info.Extension.ToUpper().Equals(".HEX"))
                 {
                     e.Effect = DragDropEffects.Copy;
@@ -1093,7 +1087,7 @@ namespace FoenixIDE.UI
             string[] obj = (string[])e.Data.GetData("FileName");
             if (obj != null && obj.Length > 0)
             {
-                FileInfo info = new FileInfo(obj[0]);
+                FileInfo info = new(obj[0]);
                 if (info.Extension.ToUpper().Equals(".HEX"))
                 {
                     LoadHexFile(obj[0]);
@@ -1105,7 +1099,7 @@ namespace FoenixIDE.UI
         // Header is PGX,1,4 byte jump address
         private void ConvertHexToPGXToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Filter = "Hex Files|*.hex",
                 Title = "Select a Hex File",
@@ -1113,29 +1107,27 @@ namespace FoenixIDE.UI
             };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                MemoryRAM temporaryRAM = new MemoryRAM(0, 4 * 1024 * 1024);
+                MemoryRAM temporaryRAM = new(0, 4 * 1024 * 1024);
                 HexFile.Load(temporaryRAM, dialog.FileName, 0, out int DataStartAddress, out int DataLength);
                 // write the file
                 string outputFileName = Path.ChangeExtension(dialog.FileName, "PGX");
-                
+
                 byte[] buffer = new byte[DataLength];
                 temporaryRAM.CopyIntoBuffer(DataStartAddress, DataLength, buffer);
-                using (BinaryWriter writer = new BinaryWriter(File.Open(outputFileName, FileMode.Create)))
-                {
-                    // 8 byte header
-                    writer.Write((byte)'P');
-                    writer.Write((byte)'G');
-                    writer.Write((byte)'X');
-                    writer.Write((byte)1);
-                    writer.Write(DataStartAddress);
-                    writer.Write(buffer);
-                }
+                using BinaryWriter writer = new(File.Open(outputFileName, FileMode.Create));
+                // 8 byte header
+                writer.Write((byte)'P');
+                writer.Write((byte)'G');
+                writer.Write((byte)'X');
+                writer.Write((byte)1);
+                writer.Write(DataStartAddress);
+                writer.Write(buffer);
             }
         }
 
         private void ConvertBinToPGXToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog
+            OpenFileDialog dialog = new()
             {
                 Filter = "Bin Files|*.bin",
                 Title = "Select a Bin File",
@@ -1151,16 +1143,14 @@ namespace FoenixIDE.UI
                     // write the file
                     int DataStartAddress = Convert.ToInt32(StrAddress, 16);
                     string outputFileName = Path.ChangeExtension(dialog.FileName, "PGX");
-                    using (BinaryWriter writer = new BinaryWriter(File.Open(outputFileName, FileMode.Create)))
-                    {
-                        // 8 byte header
-                        writer.Write((byte)'P');
-                        writer.Write((byte)'G');
-                        writer.Write((byte)'X');
-                        writer.Write((byte)1);
-                        writer.Write(DataStartAddress);
-                        writer.Write(buffer);
-                    }
+                    using BinaryWriter writer = new(File.Open(outputFileName, FileMode.Create));
+                    // 8 byte header
+                    writer.Write((byte)'P');
+                    writer.Write((byte)'G');
+                    writer.Write((byte)'X');
+                    writer.Write((byte)1);
+                    writer.Write(DataStartAddress);
+                    writer.Write(buffer);
                 }
                 else
                 {
@@ -1169,7 +1159,7 @@ namespace FoenixIDE.UI
             }
         }
 
-        private int VersionValue(string value)
+        private static int VersionValue(string value)
         {
             string[] parts = value.Split('.');
             int intValue = 0;
@@ -1196,7 +1186,7 @@ namespace FoenixIDE.UI
         private void CheckForUpdateToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string URL = "https://api.github.com/repos/Trinity-11/FoenixIDE/releases";
-            HttpClient client = new HttpClient();
+            HttpClient client = new();
 
             String version = AboutForm.AppVersion();
             int appVersion = VersionValue(version);
@@ -1224,7 +1214,7 @@ namespace FoenixIDE.UI
                         done = true;
                         break;
                     }
-                }                
+                }
             }
             else
             {
@@ -1252,13 +1242,13 @@ namespace FoenixIDE.UI
             }
         }
 
-        private void autorunEmulatorToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AutorunEmulatorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Simulator.Properties.Settings.Default.Autorun = autorunEmulatorToolStripMenuItem.Checked;
             Simulator.Properties.Settings.Default.Save();
         }
 
-        private void assetListToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AssetListToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!assetWindow.Visible)
             {

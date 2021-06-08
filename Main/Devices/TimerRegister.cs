@@ -1,15 +1,11 @@
 ﻿using FoenixIDE.Timers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Simulator.Devices
 {
-    public class TimerRegister : MemoryLocations.MemoryRAM
+    public class TimerRegister : MemoryLocations.MemoryRAM, IDisposable
     {
-        private MultimediaTimer hiresTimer = null;
+        private readonly MultimediaTimer hiresTimer = null;
 
         public delegate void RaiseInterruptFunction();
         public RaiseInterruptFunction TimerInterruptDelegate;
@@ -41,9 +37,9 @@ namespace FoenixIDE.Simulator.Devices
             {
                 // Calculate interval in milliseconds
                 int longInterval = data[5] + (data[6] << 8) + (data[7] << 16);
-                double msInterval = (double)(longInterval) * 1000/ (double)CPU_FREQ;
+                double msInterval = (double)(longInterval) * 1000 / CPU_FREQ;
                 uint adjInterval = (uint)msInterval;
-                if (adjInterval==0)
+                if (adjInterval == 0)
                 {
                     hiresTimer.Interval = 1;
                 }
@@ -52,13 +48,19 @@ namespace FoenixIDE.Simulator.Devices
                     hiresTimer.Interval = adjInterval;
                 }
 
-                
+
             }
         }
 
         void Timer_Tick(object sender, EventArgs e)
         {
             TimerInterruptDelegate?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            hiresTimer?.Dispose();
         }
     }
 }

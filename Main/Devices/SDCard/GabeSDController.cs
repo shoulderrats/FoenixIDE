@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Simulator.Devices
 {
@@ -24,10 +23,10 @@ namespace FoenixIDE.Simulator.Devices
     public class GabeSDController : SDCardDevice
     {
         private byte[] mbr = new byte[512];
-        private byte[] boot_sector = new byte[512];
+        private readonly byte[] boot_sector = new byte[512];
         private readonly byte[] fat = new byte[512];
         private byte[] readBlock, writeBlock = new byte[512];
-        private byte[] root = new byte[32 * 512]; // root dir is always 32 sectors, except FAT32, which omits it.
+        private readonly byte[] root = new byte[32 * 512]; // root dir is always 32 sectors, except FAT32, which omits it.
         private int blockPtr = 0;
         private int waitCounter = 4;
         private int BOOT_SECTOR_ADDR = 0x29 * 512;
@@ -39,10 +38,10 @@ namespace FoenixIDE.Simulator.Devices
         private int DATA_SIZE = 0;
         private int logicalSectorSize = 512;
         byte sectors_per_cluster = 1;
-        private Dictionary<int, FileEntry> FAT = new Dictionary<int, FileEntry>();
-        private string spaces = "        ";
+        private readonly Dictionary<int, FileEntry> FAT = new();
+        private readonly string spaces = "        ";
         private bool mbrPresent = false;
-        
+
         FileEntry voidEntry = null; // this is a "newfile" entry that gets used when creating a new file.
 
 
@@ -56,18 +55,13 @@ namespace FoenixIDE.Simulator.Devices
 
         public override byte ReadByte(int Address)
         {
-            switch (Address)
+            return Address switch
             {
-                case MemoryMap.GABE_SDC_TRANS_STATUS_REG - MemoryMap.GABE_SDC_CTRL_START:
-                    // fake the wait time
-                    return (isPresent && (waitCounter-- > 0)) ? (byte)1 : (byte)0;
-                case MemoryMap.GABE_SDC_TRANS_ERROR_REG - MemoryMap.GABE_SDC_CTRL_START:
-                    // return 
-                    return isPresent ? data[5] : (byte)1;
-                case MemoryMap.GABE_SDC_RX_FIFO_DATA_REG - MemoryMap.GABE_SDC_CTRL_START:
-                    return isPresent ? (readBlock != null ? readBlock[blockPtr++] : (byte)0xEF) : (byte)0;
-            }
-            return data[Address];
+                MemoryMap.GABE_SDC_TRANS_STATUS_REG - MemoryMap.GABE_SDC_CTRL_START => (isPresent && (waitCounter-- > 0)) ? (byte)1 : (byte)0,// fake the wait time
+                MemoryMap.GABE_SDC_TRANS_ERROR_REG - MemoryMap.GABE_SDC_CTRL_START => isPresent ? data[5] : (byte)1,// return 
+                MemoryMap.GABE_SDC_RX_FIFO_DATA_REG - MemoryMap.GABE_SDC_CTRL_START => isPresent ? (readBlock != null ? readBlock[blockPtr++] : (byte)0xEF) : (byte)0,
+                _ => data[Address],
+            };
         }
 
         public override void WriteByte(int Address, byte Value)
@@ -273,7 +267,7 @@ namespace FoenixIDE.Simulator.Devices
                 {
                     // Read the first sector, if it starts with $eb, then it's a Boot Sector, otherwise it's a partition table (MBR)
                     byte[] firstSector = GetData_ISO(0);
-                    if (firstSector[0] != 0xeb && firstSector[0x1FE] == 0x55 && firstSector[0x1FF] == 0xAA && (firstSector[0x1BE] & 0x80) != 0 )
+                    if (firstSector[0] != 0xeb && firstSector[0x1FE] == 0x55 && firstSector[0x1FF] == 0xAA && (firstSector[0x1BE] & 0x80) != 0)
                     {
                         mbrPresent = true;
                         mbr = firstSector;
@@ -301,8 +295,8 @@ namespace FoenixIDE.Simulator.Devices
                     {
                         sectors_per_cluster = firstSector[0xD];
                         int reserved_sectors = firstSector[0xE] + (firstSector[0xF] << 8);
-                        int numberOfFATs = firstSector[0x10]; // should be 2
-                        int maxNumberOfRootEntries = firstSector[0x11] + (firstSector[0x12] << 8);
+                        //int numberOfFATs = firstSector[0x10]; // should be 2
+                        //int maxNumberOfRootEntries = firstSector[0x11] + (firstSector[0x12] << 8);
                         byte sectors_per_fat = firstSector[0x16];
                         int small_sectors = firstSector[0x13] + (firstSector[0x14] << 8);
                         int large_sectors = firstSector[0x20] + (firstSector[0x21] << 8) + (firstSector[0x22] << 16) + (firstSector[0x23] << 24);
@@ -318,7 +312,7 @@ namespace FoenixIDE.Simulator.Devices
                         // DATA offset
                         DATA_OFFSET_START = ROOT_OFFSET_START + 0x20 * 512; // the root area is always 32 sectors
                         DATA_SIZE = small_sectors != 0 ? small_sectors * 512 : large_sectors * 512;
-                        if (firstSector[0x36]=='F' && firstSector[0x37] == 'A' && firstSector[0x38] == 'T' && firstSector[0x39] == '1')
+                        if (firstSector[0x36] == 'F' && firstSector[0x37] == 'A' && firstSector[0x38] == 'T' && firstSector[0x39] == '1')
                         {
                             if (firstSector[0x3A] == '2')
                             {
@@ -379,7 +373,7 @@ namespace FoenixIDE.Simulator.Devices
                     byte reserved_sectors = 2;
                     byte root_sectors = 32;
                     // we're reserving 32 sectors for FAT32 as well, to simplify the implementation.  This limits how big the directory is to 512 entries
-                    int capacity = GetCapacity() * 1024 * 1024 - (1+1+ reserved_sectors) * 512 - BOOT_SECTOR_ADDR - root_sectors * 512;  // remove the reserved and offset spaces, boot sector, mbr and root area
+                    int capacity = GetCapacity() * 1024 * 1024 - (1 + 1 + reserved_sectors) * 512 - BOOT_SECTOR_ADDR - root_sectors * 512;  // remove the reserved and offset spaces, boot sector, mbr and root area
                     int sector_count = 2 + BOOT_SECTOR_ADDR / 512 + reserved_sectors + 32;
 
                     int req_cluster = capacity / GetClusterSize();
@@ -406,7 +400,7 @@ namespace FoenixIDE.Simulator.Devices
                             sectors_per_fat = req_cluster / 128;
                             break;
                     }
-                    
+
                     sector_count += sectors_per_fat * 2;
 
                     switch (GetFSType())
@@ -503,7 +497,7 @@ namespace FoenixIDE.Simulator.Devices
 
                     // DATA offset
                     DATA_OFFSET_START = ROOT_OFFSET_START + ROOT_SIZE; // the root area is always 32 sectors
-                    DATA_SIZE = small_sectors != 0 ? small_sectors * 512 : large_sectors * 512;                    
+                    DATA_SIZE = small_sectors != 0 ? small_sectors * 512 : large_sectors * 512;
                 }
             }
         }
@@ -539,27 +533,27 @@ namespace FoenixIDE.Simulator.Devices
             {
                 currentCluster = 2 + 32 * 512 / GetClusterSize();
             }
-            
+
             foreach (string dir in dirs)
             {
-                FileInfo info = new FileInfo(dir);
+                FileInfo info = new(dir);
                 string dirname = info.Name.Replace(" ", "").ToUpper();
                 if (dirname.Length < 8)
                 {
                     dirname += spaces.Substring(0, 8 - dirname.Length);
                 }
-                
+
                 Array.Copy(Encoding.ASCII.GetBytes(dirname), 0, root, pointer, 8);
                 root[pointer + 11] = 0x10;
                 pointer += 32;
             }
             foreach (string file in files)
             {
-                
-                FileInfo info = new FileInfo(file);
+
+                FileInfo info = new(file);
                 int size = (int)info.Length;
                 int clusters = size / logicalSectorSize;
-                string extension = info.Extension.Length > 0 ? info.Extension.ToUpper().Substring(1) : "";
+                string extension = info.Extension.Length > 0 ? info.Extension.ToUpper()[1..] : "";
                 string filename = info.Name.Replace(" ", "").ToUpper();
                 int dot = filename.IndexOf(".");
                 if (dot > -1)
@@ -576,7 +570,7 @@ namespace FoenixIDE.Simulator.Devices
                         shortFilename = filename.Substring(0, 6) + "~" + count++;
                     }
                     while (AlreadyExists(shortFilename) && count < 10);
-                    filename = shortFilename;                    
+                    filename = shortFilename;
                 }
                 if (filename.Length < 8)
                 {
@@ -586,7 +580,7 @@ namespace FoenixIDE.Simulator.Devices
                 {
                     extension += spaces.Substring(0, 3 - extension.Length);
                 }
-                FileEntry entry = new FileEntry()
+                FileEntry entry = new()
                 {
                     fqpn = file,
                     shortname = filename,
@@ -596,7 +590,7 @@ namespace FoenixIDE.Simulator.Devices
 
                 FAT.Add(currentCluster, entry);
                 Array.Copy(Encoding.ASCII.GetBytes(filename), 0, root, pointer, 8);
-                Array.Copy(Encoding.ASCII.GetBytes(extension), 0, root, pointer +8, 3);
+                Array.Copy(Encoding.ASCII.GetBytes(extension), 0, root, pointer + 8, 3);
                 // cluster number
                 root[pointer + 0x1a] = (byte)(currentCluster & 0xFF);
                 root[pointer + 0x1b] = (byte)((currentCluster & 0xFF00) >> 8);
@@ -646,15 +640,15 @@ namespace FoenixIDE.Simulator.Devices
                             FAT.Remove(key);
                             continue;
                         }
-                        string name = System.Text.Encoding.UTF8.GetString(writeBlock, i, 8);
-                        string ext = System.Text.Encoding.UTF8.GetString(writeBlock, i + 8, 3);
+                        string name = Encoding.UTF8.GetString(writeBlock, i, 8);
+                        string ext = Encoding.UTF8.GetString(writeBlock, i + 8, 3);
                         if (byte0 != 0xE5 && entry == voidEntry)
                         {
                             entry.size = size;
-                            FileInfo info = new FileInfo(entry.fqpn);
+                            FileInfo info = new(entry.fqpn);
                             string newFileName = info.DirectoryName + "\\" + name.Trim() + "." + ext.Trim();
-                            FileStream readStream = new FileStream(entry.fqpn, FileMode.Open, FileAccess.Read);
-                            FileStream writeStream = new FileStream(newFileName, FileMode.CreateNew);
+                            FileStream readStream = new(entry.fqpn, FileMode.Open, FileAccess.Read);
+                            FileStream writeStream = new(newFileName, FileMode.CreateNew);
                             try
                             {
                                 byte[] buffer = new byte[512];
@@ -664,13 +658,13 @@ namespace FoenixIDE.Simulator.Devices
                                     writeStream.Write(buffer, cluster * 512, (cluster == entry.clusters - 1) ? size % 512 : 512);
                                 }
                                 entry.fqpn = newFileName;
-                                entry.shortname = name; 
+                                entry.shortname = name;
                             }
                             catch (Exception e)
                             {
                                 // controller error
                                 data[5] = 1;
-                                System.Console.WriteLine(e.ToString());
+                                Console.WriteLine(e.ToString());
                             }
                             finally
                             {
@@ -694,7 +688,7 @@ namespace FoenixIDE.Simulator.Devices
             int byteOffset = 0;
             switch (GetFSType())
             {
-                case FSType.FAT12: 
+                case FSType.FAT12:
                     fatCount = 513 / 3 * 2; //341
                     if (page % 3 != 0)
                     {
@@ -711,7 +705,7 @@ namespace FoenixIDE.Simulator.Devices
                     byteOffset = 0;
                     break;
             }
-            
+
             if (page == 0)
             {
                 switch (GetFSType())
@@ -746,7 +740,7 @@ namespace FoenixIDE.Simulator.Devices
 
                         // Generate the Root area FAT
                         int currentCluster = 3;
-                        for (int i =0; i < 32 * 512/ GetClusterSize() - 1; i++)
+                        for (int i = 0; i < 32 * 512 / GetClusterSize() - 1; i++)
                         {
                             fat[8 + i * 4] = (byte)(currentCluster++ & 0xFF);
                             fat[8 + i * 4 + 1] = 0;
@@ -765,7 +759,7 @@ namespace FoenixIDE.Simulator.Devices
             foreach (int key in FAT.Keys)
             {
                 FileEntry entry = FAT[key];
-                if (key > page * fatCount && key < (page +1) * fatCount ||
+                if (key > page * fatCount && key < (page + 1) * fatCount ||
                     key + entry.clusters >= page * fatCount && key < (page + 1) * fatCount)
                 {
                     int pageOffset = key % fatCount;
@@ -893,11 +887,11 @@ namespace FoenixIDE.Simulator.Devices
                         stream.Read(buffer, 0, 512);
                         return buffer;
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         // controller error
                         data[5] = 1;
-                        System.Console.WriteLine(e.ToString());
+                        Console.WriteLine(e.ToString());
                         return null;
                     }
                     finally
@@ -930,7 +924,7 @@ namespace FoenixIDE.Simulator.Devices
 
             if (fEntry != null)
             {
-                FileStream stream = new FileStream(fEntry.fqpn, FileMode.Open, FileAccess.Write);
+                FileStream stream = new(fEntry.fqpn, FileMode.Open, FileAccess.Write);
                 try
                 {
                     stream.Seek((page - writeStartCluster) * 512, SeekOrigin.Begin);
@@ -940,7 +934,7 @@ namespace FoenixIDE.Simulator.Devices
                 {
                     // controller error
                     data[5] = 1;
-                    System.Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -990,7 +984,7 @@ namespace FoenixIDE.Simulator.Devices
                 // Create a new file entry
                 CreateEmptyFile(clusterCount * 512, page);
             }
-            else if (firstPtr != -1 )
+            else if (firstPtr != -1)
             {
                 clusterCount = (512 - firstPtr) / 4;
             }
@@ -1037,11 +1031,11 @@ namespace FoenixIDE.Simulator.Devices
          */
         private byte[] GetData_ISO(int page)
         {
-            if ((page >= 0)  && (page < 512*4096)) // test if we are with in 256MB
+            if ((page >= 0) && (page < 512 * 4096)) // test if we are with in 256MB
             {
                 byte[] buffer = new byte[512];
                 string path = GetSDCardPath();
-                FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+                FileStream stream = new(path, FileMode.Open, FileAccess.Read);
                 try
                 {
                     stream.Seek(page * 512, SeekOrigin.Begin);
@@ -1052,7 +1046,7 @@ namespace FoenixIDE.Simulator.Devices
                 {
                     // controller error
                     data[5] = 1;
-                    System.Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.ToString());
                     return null;
                 }
                 finally
@@ -1068,7 +1062,7 @@ namespace FoenixIDE.Simulator.Devices
             if ((page >= 0) && (page < 512 * 4096)) // test if we are with in 256MB
             {
                 string path = GetSDCardPath();
-                FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Write);
+                FileStream stream = new(path, FileMode.Open, FileAccess.Write);
                 try
                 {
                     stream.Seek(page * 512, SeekOrigin.Begin);
@@ -1079,7 +1073,7 @@ namespace FoenixIDE.Simulator.Devices
                 {
                     // controller error
                     data[5] = 1;
-                    System.Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.ToString());
                     return;
                 }
                 finally

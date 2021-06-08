@@ -3,16 +3,11 @@ using FoenixIDE.Simulator.Devices;
 using FoenixIDE.Simulator.FileFormat;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Ports;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Timer = System.Windows.Forms.Timer;
 
 namespace FoenixIDE.UI
 {
@@ -26,9 +21,8 @@ namespace FoenixIDE.UI
         public static string[] ports;
         public FoenixSystem kernel = null;
         private BoardVersion boardVersion = BoardVersion.RevC;
-
-        SerialPort serial = new SerialPort();
-        private Queue<byte> recievedData = new Queue<byte>();
+        readonly SerialPort serial = new();
+        private readonly Queue<byte> recievedData = new();
 
         public void SetBoardVersion(BoardVersion ver)
         {
@@ -55,7 +49,7 @@ namespace FoenixIDE.UI
             InitializeComponent();
 
             serial.BaudRate = 6000000;
-            serial.Handshake = System.IO.Ports.Handshake.None;
+            serial.Handshake = Handshake.None;
             serial.Parity = Parity.None;
             serial.DataBits = 8;
             serial.StopBits = StopBits.One;
@@ -82,7 +76,7 @@ namespace FoenixIDE.UI
 
         private int GetTransmissionSize()
         {
-            int transmissionSize = -1;
+            int transmissionSize;
             if (SendFileRadio.Checked)
             {
                 GetFileLength(FileNameTextBox.Text);
@@ -143,13 +137,13 @@ namespace FoenixIDE.UI
             {
                 if (Path.GetExtension(filename).ToUpper().Equals(".BIN"))
                 {
-                    FileInfo f = new FileInfo(filename);
-                    flen = f.Length;   
+                    FileInfo f = new(filename);
+                    flen = f.Length;
                 }
                 else
                 {
                     // We're loading a HEX file, so only consider the lines that are record type 00
-                    string[] lines = System.IO.File.ReadAllLines(filename);
+                    string[] lines = File.ReadAllLines(filename);
                     foreach (string l in lines)
                     {
                         if (l.StartsWith(":"))
@@ -168,7 +162,7 @@ namespace FoenixIDE.UI
                 }
             }
             String hexSize = flen.ToString("X6");
-            FileSizeResultLabel.Text = "$" + hexSize.Substring(0, 2) + ":" + hexSize.Substring(2);
+            FileSizeResultLabel.Text = "$" + hexSize.Substring(0, 2) + ":" + hexSize[2..];
             return flen;
         }
 
@@ -177,7 +171,7 @@ namespace FoenixIDE.UI
          */
         private void BrowseFileButton_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDlg = new OpenFileDialog
+            OpenFileDialog openFileDlg = new()
             {
                 DefaultExt = ".hex",
                 Filter = "Hex documents|*.hex|Binary documents|*.bin",
@@ -194,7 +188,7 @@ namespace FoenixIDE.UI
                 ReflashCheckbox.Enabled = extension.ToUpper().Equals(".BIN");
                 // Display the file length
                 long flen = GetFileLength(openFileDlg.FileName);
-                    
+
                 SendBinaryButton.Enabled = (flen != -1) && !ConnectButton.Visible;
             }
         }
@@ -219,7 +213,7 @@ namespace FoenixIDE.UI
                 string extension = Path.GetExtension(FileNameTextBox.Text).ToUpper();
                 C256DestAddress.Enabled = (transmissionSize > 0 || BlockSendRadio.Checked) && (extension.Equals(".BIN") || ReflashCheckbox.Checked);
             }
-            
+
 
             C256SrcSize.Enabled = FetchRadio.Checked;
             C256SrcAddress.Enabled = FetchRadio.Checked;
@@ -232,7 +226,7 @@ namespace FoenixIDE.UI
         {
             SendBinaryButton.Enabled = false;
             DisconnectButton.Enabled = false;
-            hideLabelTimer_Tick(null, null);
+            HideLabelTimer_Tick(null, null);
             int transmissionSize = GetTransmissionSize();
             UploadProgressBar.Maximum = transmissionSize;
             UploadProgressBar.Value = 0;
@@ -257,7 +251,7 @@ namespace FoenixIDE.UI
                     if (Path.GetExtension(FileNameTextBox.Text).ToUpper().Equals(".BIN"))
                     {
                         // Read the bytes and put them in the buffer
-                        byte[] DataBuffer = System.IO.File.ReadAllBytes(FileNameTextBox.Text);
+                        byte[] DataBuffer = File.ReadAllBytes(FileNameTextBox.Text);
                         int FnxAddressPtr = int.Parse(C256DestAddress.Text.Replace(":", ""), System.Globalization.NumberStyles.AllowHexSpecifier);
                         Console.WriteLine("Starting Address: " + FnxAddressPtr);
                         Console.WriteLine("File Size: " + transmissionSize);
@@ -278,10 +272,8 @@ namespace FoenixIDE.UI
                         // BaseBank on RevC is $38
                         byte[] pageFF = PreparePacket2Read(0xFF00, 0x100);
                         // If send HEX files, each time we encounter a "bank" change - record 04 - send a new data block
-                        string[] lines = System.IO.File.ReadAllLines(FileNameTextBox.Text);
+                        string[] lines = File.ReadAllLines(FileNameTextBox.Text);
                         int bank = 0;
-                        int address = 0;
-
                         foreach (string l in lines)
                         {
                             if (l.StartsWith(":"))
@@ -290,21 +282,21 @@ namespace FoenixIDE.UI
                                 string reclen = l.Substring(1, 2);
                                 string offset = l.Substring(3, 4);
                                 string rectype = l.Substring(7, 2);
-                                string data = l.Substring(9, l.Length - 11);
-                                string checksum = l.Substring(l.Length - 2);
+                                string data = l[9..^2];
+                                string checksum = l[^2..];
 
                                 switch (rectype)
                                 {
                                     case "00":
                                         int length = Convert.ToInt32(reclen, 16);
                                         byte[] DataBuffer = new byte[length];
-                                        address = HexFile.GetByte(offset, 0, 2);
+                                        int address = HexFile.GetByte(offset, 0, 2);
                                         for (int i = 0; i < data.Length; i += 2)
                                         {
                                             DataBuffer[i / 2] = (byte)HexFile.GetByte(data, i, 1);
                                         }
                                         PreparePacket2Write(DataBuffer, bank + address, 0, length);
-                                        
+
                                         // TODO - make this backward compatible
                                         if (bank + address >= (BaseBankAddress + 0xFF00) && (bank + address) < (BaseBankAddress + 0xFFFF))
                                         {
@@ -351,7 +343,7 @@ namespace FoenixIDE.UI
                     if (ReflashCheckbox.Checked && MessageBox.Show("Are you sure you want to reflash your C256 System?", "Reflash", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                     {
                         CountdownLabel.Visible = true;
-                        this.Update();
+                        Update();
 
                         EraseFlash();
                         int SrcFlashAddress = Convert.ToInt32(C256DestAddress.Text.Replace(":", ""), 16);
@@ -373,7 +365,7 @@ namespace FoenixIDE.UI
                 {
                     GetFnxInDebugMode();
                 }
-                int blockAddress = Convert.ToInt32(EmuSrcAddress.Text.Replace(":",""), 16);
+                int blockAddress = Convert.ToInt32(EmuSrcAddress.Text.Replace(":", ""), 16);
                 // Read the data directly from emulator memory
                 int offset = 0;
                 int FnxAddressPtr = int.Parse(C256DestAddress.Text.Replace(":", ""), System.Globalization.NumberStyles.AllowHexSpecifier);
@@ -401,12 +393,12 @@ namespace FoenixIDE.UI
                 byte[] DataBuffer = new byte[transmissionSize];  // Maximum 2 MB, example from $0 to $1F:FFFF.
                 if (FetchData(DataBuffer, blockAddress, transmissionSize, DebugModeCheckbox.Checked))
                 {
-                    MemoryRAM mem = new MemoryRAM(blockAddress, transmissionSize);
+                    MemoryRAM mem = new(blockAddress, transmissionSize);
                     mem.Load(DataBuffer, 0, 0, transmissionSize);
-                    MemoryWindow tempMem = new MemoryWindow
+                    MemoryWindow tempMem = new()
                     {
                         Memory = mem,
-                        Text = "C256 Memory from " + blockAddress.ToString("X6") + 
+                        Text = "C256 Memory from " + blockAddress.ToString("X6") +
                             " to " + (blockAddress + transmissionSize - 1).ToString("X6")
                     };
                     tempMem.GotoAddress(blockAddress);
@@ -426,7 +418,7 @@ namespace FoenixIDE.UI
             hideLabelTimer.Enabled = true;
         }
 
-        private void hideLabelTimer_Tick(object sender, EventArgs e)
+        private void HideLabelTimer_Tick(object sender, EventArgs e)
         {
             hideLabelTimer.Enabled = false;
             CountdownLabel.Visible = false;
@@ -434,7 +426,7 @@ namespace FoenixIDE.UI
         }
 
 
-        private byte Checksum(byte[] buffer, int length)
+        private static byte Checksum(byte[] buffer, int length)
         {
             byte checksum = 0x55;
             for (int i = 1; i < length; i++)
@@ -447,7 +439,7 @@ namespace FoenixIDE.UI
         private void EraseFlash()
         {
             CountdownLabel.Text = "Erasing Flash";
-            this.Update();
+            Update();
             byte[] commandBuffer = new byte[8];
             commandBuffer[0] = 0x55;   // Header
             commandBuffer[1] = 0x11;   // Reset Flash
@@ -463,7 +455,7 @@ namespace FoenixIDE.UI
         private void ProgramFlash(int address)
         {
             CountdownLabel.Text = "Programming Flash";
-            this.Update();
+            Update();
             byte[] commandBuffer = new byte[8];
             commandBuffer[0] = 0x55;   // Header
             commandBuffer[1] = 0x10;   // Reset Flash
@@ -523,7 +515,7 @@ namespace FoenixIDE.UI
         {
             bool success = false;
             byte[] partialBuffer;
-            
+
             try
             {
                 if (serial.IsOpen)
@@ -532,7 +524,7 @@ namespace FoenixIDE.UI
                     {
                         GetFnxInDebugMode();
                     }
-                    
+
                     if (size < 2048)
                     {
                         partialBuffer = PreparePacket2Read(startAddress, size);
@@ -589,7 +581,7 @@ namespace FoenixIDE.UI
             {
                 int n = Convert.ToInt32(item, 16);
                 String value = n.ToString("X6");
-                tb.Text = value.Substring(0, 2) + ":" + value.Substring(2);
+                tb.Text = value.Substring(0, 2) + ":" + value[2..];
             }
         }
 
@@ -675,30 +667,30 @@ namespace FoenixIDE.UI
         {
             //            int dwStartTime = System.Environment.TickCount;
             byte byte_buffer;
-            Stopwatch stopWatch = new Stopwatch();
+            Stopwatch stopWatch = new();
             serial.Write(command, 0, command.Length);
 
             Stat0 = 0;
             Stat1 = 0;
             LRC = 0;
-            
+
             if (delay > 2000)
             {
                 serial.ReadTimeout = delay;
             }
             if (delay > 0)
             {
-                long StartTime = System.DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                long StartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 int roundTime = delay / 1000;
                 string label = CountdownLabel.Text;
                 do
                 {
                     CountdownLabel.Text = label + " - " + roundTime + "s";
-                    this.Update();
+                    Update();
                     Thread.Sleep(1000);
                     roundTime--;
                 }
-                while (System.DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime < delay);
+                while (DateTimeOffset.Now.ToUnixTimeMilliseconds() - StartTime < delay);
                 CountdownLabel.Text = label + " - Done!";
             }
 
@@ -734,7 +726,7 @@ namespace FoenixIDE.UI
             RxProcessLRC(data);
         }
 
-        public int TxProcessLRC(byte[] buffer)
+        public static int TxProcessLRC(byte[] buffer)
         {
             int i;
             TxLRC = 0;
@@ -743,7 +735,7 @@ namespace FoenixIDE.UI
             return TxLRC;
         }
 
-        public int RxProcessLRC(byte[] data)
+        public static int RxProcessLRC(byte[] data)
         {
             int i;
             RxLRC = 0xAA;
@@ -762,7 +754,7 @@ namespace FoenixIDE.UI
         {
             if (e.KeyCode == Keys.Escape)
             {
-                this.Close();
+                Close();
             }
         }
     }

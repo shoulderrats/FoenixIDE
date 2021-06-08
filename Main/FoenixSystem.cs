@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FoenixIDE.MemoryLocations;
 using FoenixIDE.Processor;
-using FoenixIDE.Display;
-using System.Threading;
-using FoenixIDE.MemoryLocations;
 using FoenixIDE.Simulator.Devices;
 using FoenixIDE.Simulator.FileFormat;
-using FoenixIDE.UI;
+using System.Collections.Generic;
 
 namespace FoenixIDE
 {
     public class FoenixSystem
     {
         public MemoryManager MemMgr = null;
-        public Processor.CPU CPU = null;
+        public CPU CPU = null;
 
         public ResourceChecker ResCheckerRef;
-        public Processor.Breakpoints Breakpoints = new Processor.Breakpoints();
+        public Breakpoints Breakpoints = new();
         public ListFile lstFile;
         private BoardVersion boardVersion;
-        public SortedList<int, WatchedMemory> WatchList = new SortedList<int, WatchedMemory>();
+        public SortedList<int, WatchedMemory> WatchList = new();
         private string LoadedKernel;
 
         public FoenixSystem(BoardVersion version, string DefaultKernel)
@@ -90,7 +84,7 @@ namespace FoenixIDE
 
             // Assign memory variables used by other processes
             CPU = new CPU(MemMgr);
-            
+
             MemMgr.VDMA.setVideoRam(MemMgr.VIDEO);
             MemMgr.VDMA.setSystemRam(MemMgr.RAM);
             MemMgr.VDMA.setVickyRam(MemMgr.VICKY);
@@ -109,11 +103,11 @@ namespace FoenixIDE
 
         private void TimerEvent0()
         {
-            byte mask = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
+            byte mask = MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
             if (!CPU.DebugPause && !CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT02_TMR0) == (byte)Register0.FNX0_INT02_TMR0))
             {
                 // Set the Timer0 Interrupt
-                byte IRQ0 = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG0);
+                byte IRQ0 = MemMgr.ReadByte(MemoryMap.INT_PENDING_REG0);
                 IRQ0 |= (byte)Register0.FNX0_INT02_TMR0;
                 MemMgr.INTERRUPT.WriteFromGabe(0, IRQ0);
                 CPU.Pins.IRQ = true;
@@ -121,11 +115,11 @@ namespace FoenixIDE
         }
         private void TimerEvent1()
         {
-            byte mask = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
+            byte mask = MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
             if (!CPU.DebugPause && !CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT03_TMR1) == (byte)Register0.FNX0_INT03_TMR1))
             {
                 // Set the Timer1 Interrupt
-                byte IRQ0 = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG0);
+                byte IRQ0 = MemMgr.ReadByte(MemoryMap.INT_PENDING_REG0);
                 IRQ0 |= (byte)Register0.FNX0_INT03_TMR1;
                 MemMgr.INTERRUPT.WriteFromGabe(0, IRQ0);
                 CPU.Pins.IRQ = true;
@@ -133,11 +127,11 @@ namespace FoenixIDE
         }
         private void TimerEvent2()
         {
-            byte mask = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_MASK_REG0);
+            byte mask = MemMgr.ReadByte(MemoryMap.INT_MASK_REG0);
             if (!CPU.DebugPause && !CPU.Flags.IrqDisable && ((~mask & (byte)Register0.FNX0_INT04_TMR2) == (byte)Register0.FNX0_INT04_TMR2))
             {
                 // Set the Timer2 Interrupt
-                byte IRQ0 = MemMgr.ReadByte(MemoryLocations.MemoryMap.INT_PENDING_REG0);
+                byte IRQ0 = MemMgr.ReadByte(MemoryMap.INT_PENDING_REG0);
                 IRQ0 |= (byte)Register0.FNX0_INT04_TMR2;
                 MemMgr.INTERRUPT.WriteFromGabe(0, IRQ0);
                 CPU.Pins.IRQ = true;
@@ -175,8 +169,8 @@ namespace FoenixIDE
 
             if (LoadedKernel.EndsWith(".fnxml", true, null))
             {
-                this.ResetMemory();
-                FoeniXmlFile fnxml = new FoeniXmlFile(this, ResCheckerRef);
+                ResetMemory();
+                FoeniXmlFile fnxml = new(this, ResCheckerRef);
                 fnxml.Load(LoadedKernel);
                 boardVersion = fnxml.Version;
             }
@@ -190,9 +184,9 @@ namespace FoenixIDE
                         lstFile = new ListFile(LoadedKernel);
                     }
                     else
-                    { 
+                    {
                         // TODO: This results in lines of code to be shown in incorrect order - Fix
-                        ListFile tempList = new ListFile(LoadedKernel);
+                        ListFile tempList = new(LoadedKernel);
                         foreach (DebugLine line in tempList.Lines.Values)
                         {
                             if (lstFile.Lines.ContainsKey(line.PC))
@@ -217,7 +211,7 @@ namespace FoenixIDE
             }
 
             // See if lines of code exist in the 0x18_0000 to 0x18_FFFF block for RevB or 0x38_0000 to 0x38_FFFF block for Rev C
-            List<DebugLine> copiedLines = new List<DebugLine>();
+            List<DebugLine> copiedLines = new();
             if (lstFile.Lines.Count > 0)
             {
                 foreach (DebugLine line in lstFile.Lines.Values)

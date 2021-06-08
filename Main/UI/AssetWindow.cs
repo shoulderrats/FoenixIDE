@@ -1,6 +1,4 @@
-﻿
-using FoenixIDE.Simulator.FileFormat;
-using System;
+﻿using System;
 using System.IO;
 using System.Windows.Forms;
 using static FoenixIDE.Simulator.FileFormat.ResourceChecker;
@@ -75,8 +73,8 @@ namespace FoenixIDE.UI
                 {
                     // Export the asset to file
                     case 4:
-                        FileInfo info = new FileInfo(res.Name);
-                        SaveFileDialog saveDlg = new SaveFileDialog
+                        FileInfo info = new(res.Name);
+                        SaveFileDialog saveDlg = new()
                         {
                             Title = "Save Asset to File",
                             Filter = "Raw File (*.bin)|*.bin|Palette File (*.pal)|*.pal |Tilemap File (*.tls)| *.tls",

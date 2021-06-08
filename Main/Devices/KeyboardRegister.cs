@@ -1,16 +1,12 @@
 ﻿using FoenixIDE.Basic;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FoenixIDE.Simulator.Devices
 {
-    public class KeyboardRegister: MemoryLocations.MemoryRAM
+    public class KeyboardRegister : MemoryLocations.MemoryRAM
     {
         private bool mouseDevice = false;
         private byte ps2PacketCntr = 0;
-        private byte[] ps2packet = new byte[3];
+        private readonly byte[] ps2packet = new byte[3];
         private FoenixSystem kernel;
 
         public KeyboardRegister(int StartAddress, int Length) : base(StartAddress, Length)
@@ -119,7 +115,7 @@ namespace FoenixIDE.Simulator.Devices
             }
         }
 
-        
+
         public void MousePackets(byte buttons, byte X, byte Y)
         {
             mouseDevice = true;

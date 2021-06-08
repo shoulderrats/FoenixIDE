@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FoenixIDE
+﻿namespace FoenixIDE
 {
     public static class SystemLog
     {
@@ -17,7 +11,7 @@ namespace FoenixIDE
 
         public static void WriteLine(SeverityCodes Severity, string Message)
         {
-            global::System.Diagnostics.Debug.WriteLine("LOG: " + Message);
+            System.Diagnostics.Debug.WriteLine("LOG: " + Message);
         }
     }
 }

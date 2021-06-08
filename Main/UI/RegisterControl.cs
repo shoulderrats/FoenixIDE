@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using FoenixIDE.Processor;
 using System.ComponentModel;
-using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using FoenixIDE.Processor;
 
 namespace FoenixIDE.UI
 {
@@ -18,16 +13,16 @@ namespace FoenixIDE.UI
 
         string _caption;
         string _value;
-        FoenixIDE.Processor.Register _register = null;
-        FoenixIDE.Processor.RegisterBankNumber _bank = null;
+        Register _register = null;
+        RegisterBankNumber _bank = null;
 
         public string Caption
         {
-            get { return this._caption; }
+            get { return _caption; }
             set
             {
-                this._caption = value;
-                this.label1.Text = value;
+                _caption = value;
+                label1.Text = value;
             }
         }
 
@@ -35,13 +30,13 @@ namespace FoenixIDE.UI
         {
             get
             {
-                return this._value;
+                return _value;
             }
 
             set
             {
-                this._value = value;
-                this.textBox1.Text = value;
+                _value = value;
+                textBox1.Text = value;
             }
         }
 
@@ -50,17 +45,17 @@ namespace FoenixIDE.UI
         {
             get
             {
-                return this._register;
+                return _register;
             }
 
             set
             {
-                this._register = value;
+                _register = value;
                 if (value != null)
                 {
                     UpdateValue();
                 }
-                
+
             }
         }
 
@@ -68,20 +63,20 @@ namespace FoenixIDE.UI
         {
             if (Bank != null && Register != null)
             {
-                this.Value = Bank.Value.ToString("X2") + this._register.Value.ToString("X4");
+                Value = Bank.Value.ToString("X2") + _register.Value.ToString("X4");
             }
             else if (Register != null)
             {
-                this.Value = _register.ToString();
+                Value = _register.ToString();
             }
         }
 
         public RegisterBankNumber Bank
         {
-            get { return this._bank; }
+            get { return _bank; }
             set
             {
-                this._bank = value;
+                _bank = value;
                 UpdateValue();
             }
         }

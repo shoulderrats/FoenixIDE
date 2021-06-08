@@ -17,6 +17,13 @@
             {
                 components.Dispose();
             }
+            BackgroundTextBrush?.Dispose();
+            TextBrush?.Dispose();
+            BorderBrush?.Dispose();
+            InvertedBrush?.Dispose();
+            CursorBrush?.Dispose();
+            hiresTimer?.Dispose();
+            frameBuffer?.Dispose();
             base.Dispose(disposing);
         }
 

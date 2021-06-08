@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FoenixIDE.Processor;
+using System;
 using System.Windows.Forms;
-using FoenixIDE.Processor;
 
 namespace FoenixIDE
 {
@@ -19,10 +14,10 @@ namespace FoenixIDE
         private CPU _cpu;
         public CPU CPU
         {
-            get { return this._cpu; }
+            get { return _cpu; }
             set
             {
-                this._cpu = value;
+                _cpu = value;
                 SetRegisters();
             }
 
@@ -32,20 +27,20 @@ namespace FoenixIDE
         {
             if (_cpu != null)
             {
-                this.A.Register = _cpu.A;
-                this.X.Register = _cpu.X;
-                this.Y.Register = _cpu.Y;
-                this.Stack.Register = _cpu.Stack;
-                this.DBR.Register = _cpu.DataBank;
-                this.D.Register = _cpu.DirectPage;
-                this.Flags.Register = _cpu.Flags;
+                A.Register = _cpu.A;
+                X.Register = _cpu.X;
+                Y.Register = _cpu.Y;
+                Stack.Register = _cpu.Stack;
+                DBR.Register = _cpu.DataBank;
+                D.Register = _cpu.DirectPage;
+                Flags.Register = _cpu.Flags;
             }
         }
 
         public void UpdateRegisters()
         {
             PC.Value = _cpu.PC.ToString("X6");
-            foreach (object c in this.groupBox1.Controls)
+            foreach (object c in groupBox1.Controls)
             {
                 if (c is UI.RegisterControl rc)
                 {

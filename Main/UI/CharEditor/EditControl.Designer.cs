@@ -17,6 +17,8 @@
             {
                 components.Dispose();
             }
+            textBrush?.Dispose();
+            borderPen?.Dispose();
             base.Dispose(disposing);
         }
 

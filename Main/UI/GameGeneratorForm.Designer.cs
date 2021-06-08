@@ -17,6 +17,7 @@
             {
                 components.Dispose();
             }
+            popupMenu?.Dispose();
             base.Dispose(disposing);
         }
 
@@ -141,7 +142,7 @@
             this.cbCollision1.TabIndex = 13;
             this.cbCollision1.Text = "STT_COL IRQ";
             this.cbCollision1.UseVisualStyleBackColor = true;
-            this.cbCollision1.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbCollision1.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbCollision0
             // 
@@ -152,7 +153,7 @@
             this.cbCollision0.TabIndex = 12;
             this.cbCollision0.Text = "STS_COL IRQ";
             this.cbCollision0.UseVisualStyleBackColor = true;
-            this.cbCollision0.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbCollision0.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbKeyboard
             // 
@@ -163,7 +164,7 @@
             this.cbKeyboard.TabIndex = 11;
             this.cbKeyboard.Text = "Keyboard IRQ";
             this.cbKeyboard.UseVisualStyleBackColor = true;
-            this.cbKeyboard.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbKeyboard.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbMouse
             // 
@@ -174,7 +175,7 @@
             this.cbMouse.TabIndex = 10;
             this.cbMouse.Text = "Mouse IRQ";
             this.cbMouse.UseVisualStyleBackColor = true;
-            this.cbMouse.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbMouse.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbTimer2
             // 
@@ -185,7 +186,7 @@
             this.cbTimer2.TabIndex = 9;
             this.cbTimer2.Text = "Timer2 IRQ";
             this.cbTimer2.UseVisualStyleBackColor = true;
-            this.cbTimer2.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbTimer2.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbTimer1
             // 
@@ -196,7 +197,7 @@
             this.cbTimer1.TabIndex = 8;
             this.cbTimer1.Text = "Timer1 IRQ";
             this.cbTimer1.UseVisualStyleBackColor = true;
-            this.cbTimer1.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbTimer1.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbSOL
             // 
@@ -207,7 +208,7 @@
             this.cbSOL.TabIndex = 7;
             this.cbSOL.Text = "SOL IRQ";
             this.cbSOL.UseVisualStyleBackColor = true;
-            this.cbSOL.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbSOL.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbSOF
             // 
@@ -218,7 +219,7 @@
             this.cbSOF.TabIndex = 6;
             this.cbSOF.Text = "SOF IRQ";
             this.cbSOF.UseVisualStyleBackColor = true;
-            this.cbSOF.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbSOF.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // cbTimer0
             // 
@@ -229,7 +230,7 @@
             this.cbTimer0.TabIndex = 5;
             this.cbTimer0.Text = "Timer0 IRQ";
             this.cbTimer0.UseVisualStyleBackColor = true;
-            this.cbTimer0.CheckedChanged += new System.EventHandler(this.cbIRQ_CheckedChanged);
+            this.cbTimer0.CheckedChanged += new System.EventHandler(this.CbIRQ_CheckedChanged);
             // 
             // CloseButton
             // 
